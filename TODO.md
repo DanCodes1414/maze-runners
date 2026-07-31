@@ -1,6 +1,6 @@
 # TODO List
 
-## General
+## General (dqureshi)
 - [ ] Flake8 passing?
 - [ ] `mypy --strict .` passing?
 - [ ] Runtime errors handled?
@@ -11,7 +11,7 @@
 - [ ] Both evaluatees fully understand the project and our code?
 
 
-## Config txt validation and parsing
+## Config txt validation and parsing (dmgeorgi)
 - [ ] Handle invalid/missing file
 - [ ] Handle maze too small for 42 logo
 - [ ] Handle missing parameters
@@ -23,7 +23,7 @@
 - [ ] Default config file included in Git repo?
 
 
-## Maze Generation
+## Maze Generation (dqureshi)
 - [ ] External walls are fully covered (no escaping via the edge of the maze!)
 - [ ] No blocked off or isolated cells (except for the 42 logo)
 - [ ] Neighbouring cells must have walls touching each other (i.e, if there is a wall on the east for Cell 1, there must be a wall on the west for Cell 2)
@@ -34,7 +34,7 @@
 - [ ] BONUS: Is the second algorithm implemented?
 
 
-## Output file
+## Output file (dqureshi)
 - [ ] 1 hexa number for each cell (when viewed in binary, 1 means wall (closed) and 0 is no-wall (open))
 - [ ] The hexa number viewed in binary represent the directions
     * **North**: 2^0 place
@@ -49,7 +49,7 @@
 - [ ] File is created in root and saved properly
 
 
-## Terminal ASCII rendering
+## Terminal ASCII rendering (dmgeorgi)
 - [ ] Generated maze appears when running code.
 - [ ] Option to: Generate a new maze
 - [ ] Option to: Show/Hide a valid shortest path from the entrance to the exit.
@@ -59,7 +59,7 @@
 - [ ] Indication of which cell is the Entry cell and which cell is the Exit cell.
 
 
-## Standalone module
+## Standalone module (dqureshi)
 - [ ] Documentation on how to use and import the module
     * Instantiate and use the generator, with some basic example.
     * Pass custom parameters (e.g., size, seed).
@@ -67,8 +67,8 @@
 - [ ] mazegen-* package exists in root and can be used with pip/uv? (Example of filename: `mazegen-1.0.0-py3.whl`)
 
 
-## Makefile
-- [ ] **install**: Install dependencies with pip/uv
+## Makefile (dmgeorgi)
+- [ ] **install**: Install dependencies with pip/uv (dqureshi)
 - [ ] **run**: Execute the main script
 - [ ] **debug**: Run while debugging
 - [ ] **clean**: Remove temporary files (__pycache__, .mypy_cache)
@@ -78,7 +78,7 @@
 - [ ] **lint-strict**: `flake8 .` and `mypy --strict .
 
 
-## Testing
+## Testing (dqureshi)
 - [ ] Write basic unittests for the maze algorithm
 - [ ] Write basic unittests for the output file
 - [ ] Write unittests for edge-cases (e.g. maze too small, invalid config file).
