@@ -8,7 +8,7 @@
 - [ ] .gitignore included?
 - [ ] Use venv for dependency isolation 
 - [ ] `a_maze_ing.py` as main project file
-- [ ] Both evaluatees fully understand the project and our code?
+- [ ] Both evaluatees fully understand the project and our code??
 
 
 ## Config txt validation and parsing (dmgeorgi)
