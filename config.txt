@@ -1,0 +1,13 @@
+WIDTH=20
+HEIGHT=25
+ENTRY=0,6
+   EXIT   =2,3
+OUTPUT_FILE=maze.txt
+#this is also a comment
+# this is a comment
+  #   this is 
+
+    
+PERFECT= true
+
+
