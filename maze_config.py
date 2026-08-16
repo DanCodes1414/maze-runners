@@ -10,7 +10,7 @@ class PointOutOfBoundsError(Exception):
     def __init__(self, point_coords: tuple[int, int],
                  point_name: str, dimension: str, max_dimension: int) -> None:
         super().__init__(f"{point_name} point {point_coords}"
-                         "is not in the maze."
+                         " is not in the maze."
                          f" Maximum {dimension} is {max_dimension}.")
 
 
@@ -52,12 +52,12 @@ class MazeConfig:
                        maze_dimensions: tuple[int, int]) -> tuple[int, int]:
         MazeConfig.validate_dimension(point_coords[0], "width")
         MazeConfig.validate_dimension(point_coords[1], "height")
-        if point_coords[0] > maze_dimensions[0]:
+        if point_coords[0] >= maze_dimensions[0]:
             raise PointOutOfBoundsError(point_coords, point_name,
-                                        "width", maze_dimensions[0])
-        if point_coords[1] > maze_dimensions[1]:
+                                        "width", maze_dimensions[0] - 1)
+        if point_coords[1] >= maze_dimensions[1]:
             raise PointOutOfBoundsError(point_coords, point_name,
-                                        "height", maze_dimensions[1])
+                                        "height", maze_dimensions[1] - 1)
         return point_coords
 
     def __init__(self, output_filename: str, width: int, height: int,
