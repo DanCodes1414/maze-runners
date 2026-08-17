@@ -6,7 +6,7 @@ import sys
 
 def main() -> int:
     if len(sys.argv) != 2:
-        print("Error: wrong number of args. \n"
+        print("Error: wrong number of args.\n"
               "Usage: python3 a_maze_ing.py <config_file/config.txt>",
               file=sys.stderr)
         return 1

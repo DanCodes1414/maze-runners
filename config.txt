@@ -3,13 +3,14 @@ HEIGHT=12
 
 ENTRY=3,5
 
-EXIT=2, 3
+ EXIT=2, 3
 OUTPUT_FILE=maze.txt
 #this is also a comment
 # this is a comment
   #   this is 
 
-    
+#  exit 19,14   
 PERFECT= true
 
+# SEED=44
 
