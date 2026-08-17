@@ -12,15 +12,15 @@
 
 
 ## Config txt validation and parsing (dmgeorgi)
-- [ ] Handle invalid/missing file
+- [x] Handle invalid/missing file
 - [ ] Handle maze too small for 42 logo
-- [ ] Handle missing parameters
-- [ ] Handle entry/exit out of range or the same
-- [ ] Ignore lines starting with # (comments)
+- [x] Handle missing parameters
+- [x] Handle entry/exit out of range or the same
+- [x] Ignore lines starting with # (comments)
 - [ ] output-file is a txt file (must end with .txt extension, otherwise rejected)
-- [ ] `a_maze_ing.py` as main project file
+- [x] `a_maze_ing.py` as main project file
 - [ ] BONUS: Seed/Algorithm/Display parameters included?
-- [ ] Default config file included in Git repo?
+- [x] Default config file included in Git repo?
 
 
 ## Maze Generation (dqureshi)

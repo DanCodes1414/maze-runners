@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
 
 
-class BadDimensionError(Exception):
-    def __init__(self, dimension: str) -> None:
-        super().__init__(f"{dimension} cannot be negative.")
+class InvalidCoordinateError(Exception):
+    def __init__(self, dimension: int, dimension_name: str) -> None:
+        super().__init__(f"{dimension_name} is {dimension}."
+                         f" {dimension_name} cannot be negative.")
 
 
 class PointOutOfBoundsError(Exception):
     def __init__(self, point_coords: tuple[int, int],
                  point_name: str, dimension: str, max_dimension: int) -> None:
         super().__init__(f"{point_name} point {point_coords}"
-                         " is not in the maze."
-                         f" Maximum {dimension} is {max_dimension}.")
+                         f" is not in the maze. Maximum {dimension}"
+                         f" coordinate is {max_dimension}.")
 
 
-class KeyError(Exception):
+class LineSyntaxError(Exception):
+    def __init__(self, line: str) -> None:
+        super().__init__(f"The following line has invalid syntax: {line}")
+
+
+class MissingKeyError(Exception):
     def __init__(self, missing_keys: list[str]) -> None:
-        super().__init__(f"Check the existance and syntax "
-                         f"of the following: {missing_keys}")
+        super().__init__(f"The following keys are missing: {missing_keys}")
 
 
 class PointError(Exception):
@@ -31,41 +36,57 @@ class FlagError(Exception):
 
 
 class TupleError(Exception):
-    def __init__(self, point_name: str, num: int) -> None:
-        super().__init__(f"{point_name} takes exactly 2 coordinates,"
-                         f" but {num} was provided")
+    def __init__(self, point_name: str) -> None:
+        super().__init__("Wrong number of coordinates"
+                         f" provided for {point_name}")
 
+
+class MazeTooSmallError(Exception):
+    def __init__(self, maze_dimension: str, num: int) -> None:
+        super().__init__(f"The {maze_dimension} of the maze is too small."
+                         f" {maze_dimension.capitalize()} must be at least {num}.")
 
 class MazeConfig:
 
     mandatory_keys = ["WIDTH", "HEIGHT",
                       "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"]
 
+    additional_keys = ["SEED", "ALGORITHM", "DISPLAY_MODE"]
+
     @staticmethod
     def validate_dimension(dimension: int, dimension_name: str) -> int:
         if dimension < 0:
-            raise BadDimensionError(dimension_name.capitalize())
+            raise InvalidCoordinateError(dimension, dimension_name)
         return dimension
+
+    @staticmethod
+    def validate_maze_size(width: int, height: int) -> tuple[int, int]:
+        if width < 1:
+            raise MazeTooSmallError("width", 1)
+        if height < 1:
+            raise MazeTooSmallError("height", 1)
+        if width * height < 2:
+            raise MazeTooSmallError("area", 2)
+        return (width, height)
 
     @staticmethod
     def validate_point(point_name: str, point_coords: tuple[int, int],
                        maze_dimensions: tuple[int, int]) -> tuple[int, int]:
-        MazeConfig.validate_dimension(point_coords[0], "width")
-        MazeConfig.validate_dimension(point_coords[1], "height")
+        MazeConfig.validate_dimension(point_coords[0], f"{point_name.upper()} x-coordinate")
+        MazeConfig.validate_dimension(point_coords[1], f"{point_name.upper()} y-coordinate")
         if point_coords[0] >= maze_dimensions[0]:
             raise PointOutOfBoundsError(point_coords, point_name,
-                                        "width", maze_dimensions[0] - 1)
+                                        "x-coordinate", maze_dimensions[0] - 1)
         if point_coords[1] >= maze_dimensions[1]:
             raise PointOutOfBoundsError(point_coords, point_name,
-                                        "height", maze_dimensions[1] - 1)
+                                        "y-coordinate", maze_dimensions[1] - 1)
         return point_coords
 
     def __init__(self, output_filename: str, width: int, height: int,
                  entry_coords: tuple[int, int], exit_coords: tuple[int, int],
                  perfect_flag: bool) -> None:
         self.output_filename = output_filename
-        self.width = MazeConfig.validate_dimension(width, "width")
-        self.height = MazeConfig.validate_dimension(height, "height")
+        self.width, self.height = MazeConfig.validate_maze_size(width, height)
         maze_dimensions = (width, height)
         self.entry_point = MazeConfig.validate_point(
             "entry", entry_coords, maze_dimensions)
@@ -98,25 +119,33 @@ class MazeConfig:
     def create_kv_dictionary(non_comment_lines: list[str]) -> dict[str, str]:
         kv_dictionary: dict[str, str] = {}
         for line in non_comment_lines:
-            kv_pair = line.split('=')
+            kv_pair = line.split('=', 1)
             kv_pair[0] = kv_pair[0].upper().strip()
-            if len(kv_pair) == 2 and kv_pair[0] not in kv_dictionary.keys():
+            if len(kv_pair) < 2:
+                raise LineSyntaxError(kv_pair[0])
+            if kv_pair[0] not in kv_dictionary.keys():
                 kv_dictionary[kv_pair[0]] = kv_pair[1].strip()
         return kv_dictionary
 
     @staticmethod
-    def get_point(kv_dictionary: dict[str, str],
+    def get_dimension(dimension_str: str, dimension_name: str) -> int:
+        try:
+            dimesnion_int = int(dimension_str)
+        except ValueError:
+            raise ValueError(f"ValueError on {dimension_name}. "
+                             f"{dimension_name} value in configuration file:"
+                             f" '{dimension_str}'")
+        return dimesnion_int
+
+    @classmethod
+    def get_point(cls, kv_dictionary: dict[str, str],
                   point_name: str) -> tuple[int, int]:
         point_str = kv_dictionary[point_name]
         coords = point_str.split(',')
         if len(coords) != 2:
-            raise TupleError(point_name, len(coords))
-        try:
-            x_coord = int(coords[0])
-            y_coord = int(coords[1])
-        except ValueError:
-            raise ValueError(f"Non-numerical coordnates detected."
-                             f"Check {point_name}: {coords}")
+            raise TupleError(point_name)
+        x_coord = cls.get_dimension(coords[0], f"{point_name} x-coordinate")
+        y_coord = cls.get_dimension(coords[1], f"{point_name} y-coordinate")
         return (x_coord, y_coord)
 
     @staticmethod
@@ -133,12 +162,12 @@ class MazeConfig:
             content = f.read()
         non_comment_lines = cls.remove_comments_and_whitespace(content)
         kv_dictionary = cls.create_kv_dictionary(non_comment_lines)
-        bad_lines = cls.has_mandatory_keys(kv_dictionary)
-        if bad_lines:
-            raise KeyError(bad_lines)
+        missing_keys = cls.has_mandatory_keys(kv_dictionary)
+        if missing_keys:
+            raise MissingKeyError(missing_keys)
         output_filename = kv_dictionary["OUTPUT_FILE"]
-        width = int(kv_dictionary["WIDTH"])
-        height = int(kv_dictionary["HEIGHT"])
+        width = cls.get_dimension(kv_dictionary["WIDTH"], "WIDTH")
+        height = cls.get_dimension(kv_dictionary["HEIGHT"], "HEIGHT")
         entry_point = cls.get_point(kv_dictionary, "ENTRY")
         exit_point = cls.get_point(kv_dictionary, "EXIT")
         perfect_flag = cls.get_flag(kv_dictionary["PERFECT"])
