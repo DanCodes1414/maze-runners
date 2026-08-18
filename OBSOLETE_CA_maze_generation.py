@@ -42,8 +42,7 @@ class Cell(BaseModel):
     row: int
     col: int
     state: CellState = Field(default=CellState.FREE)
-    #is_blocked: bool = Field(default=False) # Possibly add is_blocked to CellState enum.
-    walls: int = Field(default=15, ge=1, le=15) # 4 bits for walls: N=8, E=4, S=2, W=1 (3=0011 means S and W walls). Should be between 1 and 15
+    walls: int = Field(default=15, ge=1, le=15) # 4 bits for walls: N=1, E=2, S=4, W=8 (3=0011 means S and W walls). Should be between 1 and 15
     parent: str = Field(default=None) # directions of parent cell (N, E, S, W)
     free_neighbours: list[str] = Field(default_factory=list) # directions of free neighbours (N, E, S, W)
 
@@ -155,11 +154,60 @@ def algorithm_step(grid: list[list[Cell]]) -> list[list[Cell]]:
     return grid
 
 
+def imperfect_maze(grid: list[list[Cell]]) -> list[list[Cell]]:
+    """
+    Introduces loops into a perfect bitmask maze by knocking down shared walls.
+    """
+    removal_rate = rand.randint(5, 25) / 100
+    rows = len(grid)
+    cols = len(grid[0])
+    
+    WALL_N, WALL_E, WALL_S, WALL_W = 1, 2, 4, 8
+    directions = [
+        (WALL_E, WALL_W, 0, 1),
+        (WALL_S, WALL_N, 1, 0)
+    ]
+    
+    eligible_walls = []
+
+    # Gather all existing, removable internal walls
+    for r in range(rows):
+        for c in range(cols):
+            current_cell = grid[r][c]
+            
+            # Skip operations if the current cell is blocked (e.g., 42 logo)
+            if current_cell.state == CellState.BLOCKED:
+                continue
+
+            for wall_bit, opp_bit, dr, dc in directions:
+                # Check if the wall between them is currently intact
+                if (current_cell.walls & wall_bit) != 0:
+                    nr, nc = r + dr, c + dc
+                    
+                    # Ensure neighbor is inside the grid and not a blocked cell
+                    if 0 <= nr < rows and 0 <= nc < cols:
+                        neighbor_cell = grid[nr][nc]
+                        if neighbor_cell.state != CellState.BLOCKED:
+                            eligible_walls.append((current_cell, neighbor_cell, wall_bit, opp_bit))
+
+    # Calculate selection limits and pick random walls to break
+    num_to_remove = int(len(eligible_walls) * removal_rate)
+    walls_to_remove = rand.sample(eligible_walls, num_to_remove)
+
+    # Knock down walls simultaneously using bitwise operations
+    for cell_a, cell_b, bit_a, bit_b in walls_to_remove:
+        # Clear the bit representing the wall
+        cell_a.walls &= ~bit_a
+        cell_b.walls &= ~bit_b
+
+    return grid
+
+
 def wall_direction(direction: str) -> int:
-    if direction == 'N': return 8
-    elif direction == 'E': return 4
-    elif direction == 'S': return 2
-    elif direction == 'W': return 1
+    if direction == 'N': return 1
+    elif direction == 'E': return 2
+    elif direction == 'S': return 4
+    elif direction == 'W': return 8
 
 
 def get_blocked_cells(rows: int, cols: int) -> set[tuple[int, int]]:
@@ -198,7 +246,18 @@ def get_blocked_cells(rows: int, cols: int) -> set[tuple[int, int]]:
 
 # ■ (U+25A0) - Black Square
 
+
 def render_maze(grid: list[list[Cell]], start: tuple[int, int], end: tuple[int, int]):
+    rows = len(grid)
+    cols = len(grid[0])
+    for r in range(rows):
+        for c in range(cols):
+            print("▋", end="")
+        print("▋")
+    
+
+
+def render_maze_failed(grid: list[list[Cell]], start: tuple[int, int], end: tuple[int, int]):
     for r in range(len(grid)):
         for c1 in range(len(grid[0])):
             cell = grid[r][c1]
@@ -206,7 +265,7 @@ def render_maze(grid: list[list[Cell]], start: tuple[int, int], end: tuple[int, 
                 print("▋", end="")
             else:
                 print("▋", end="")
-            if cell.walls & 8: # N wall
+            if cell.walls & 1: # N wall
                 print("▋", end="")
             else:
                 print(" ", end="")
@@ -214,7 +273,7 @@ def render_maze(grid: list[list[Cell]], start: tuple[int, int], end: tuple[int, 
         for c2 in range(len(grid[0])):
             cell = grid[r][c2]
             cell_left = grid[r][c2 - 1] if c2 > 0 else None
-            if cell.walls & 1 and (cell_left is None or not cell_left.walls & 4): # W wall
+            if cell.walls & 8 and (cell_left is None or not cell_left.walls & 2): # W wall
                 print("▋", end="")
             if cell.state == CellState.BLOCKED:
                 print(f"{GREY}█{END}", end="")
@@ -224,7 +283,7 @@ def render_maze(grid: list[list[Cell]], start: tuple[int, int], end: tuple[int, 
                 print(f"{RED}█{END}", end="")
             else:
                 print(" ", end="")
-            if cell.walls & 4: # E wall
+            if cell.walls & 2: # E wall
                 print("▋", end="")
             else:
                 print(" ", end="")
@@ -232,14 +291,40 @@ def render_maze(grid: list[list[Cell]], start: tuple[int, int], end: tuple[int, 
     for c3 in range(len(grid[0])):
         cell = grid[r][c3]
         print("▋", end="")
-        if cell.walls & 2: # S wall
+        if cell.walls & 4: # S wall
             print("▋", end="")
         else:
             print(" ", end="")
     print("▋")
 
 
-grid = initialise_grid(15, 15, (1, 1), (12, 12))
-grid = algorithm_step(grid)
+def export_maze_to_template(grid: list[list['Cell']], entry: tuple[int, int], exit_cell: tuple[int, int], filename: str = "output_file.txt"):
+    """
+    Exports a 2D grid of Cells into a formatted configuration file matching the template.
+    """
+    rows = len(grid)
+    cols = len(grid[0])
+    
+    grid_lines = []
+    for r in range(rows):
+        row_chars = []
+        for c in range(cols):
+            cell = grid[r][c]
+            row_chars.append(format(cell.walls, 'x'))
+        grid_lines.append("".join(row_chars))
 
-render_maze(grid, (1, 1), (12, 12))
+    with open(filename, 'w') as f:
+        for line in grid_lines:
+            f.write(line + "\n")
+            
+        f.write(f"\n{entry[0] + 1},{entry[1] + 1}\n")
+        f.write(f"{exit_cell[0] + 1},{exit_cell[1] + 1}\n")
+
+
+grid = initialise_grid(20, 25, (0, 0), (18, 13))
+grid = algorithm_step(grid)
+#grid = imperfect_maze(grid)
+
+render_maze(grid, (0, 0), (18, 13))
+
+export_maze_to_template(grid, (0, 0), (18, 13))
