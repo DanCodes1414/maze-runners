@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 
 
-class InvalidCoordinateError(Exception):
+class MazeConfigError(Exception):
+    pass
+
+
+class InvalidCoordinateError(MazeConfigError):
     def __init__(self, dimension: int, dimension_name: str) -> None:
         super().__init__(f"{dimension_name} is {dimension}."
                          f" {dimension_name} cannot be negative.")
 
 
-class PointOutOfBoundsError(Exception):
+class PointOutOfBoundsError(MazeConfigError):
     def __init__(self, point_coords: tuple[int, int],
                  point_name: str, dimension: str, max_dimension: int) -> None:
         super().__init__(f"{point_name} point {point_coords}"
@@ -15,33 +19,33 @@ class PointOutOfBoundsError(Exception):
                          f" is {max_dimension}.")
 
 
-class LineSyntaxError(Exception):
+class LineSyntaxError(MazeConfigError):
     def __init__(self, line: str) -> None:
         super().__init__(f"The following line has invalid syntax: {line}")
 
 
-class MissingKeyError(Exception):
+class MissingKeyError(MazeConfigError):
     def __init__(self, missing_keys: list[str]) -> None:
         super().__init__(f"The following keys are missing: {missing_keys}")
 
 
-class PointError(Exception):
+class PointError(MazeConfigError):
     def __init__(self) -> None:
         super().__init__("Entry and exit points cannot be the same.")
 
 
-class FlagError(Exception):
+class FlagError(MazeConfigError):
     def __init__(self, flag: str) -> None:
         super().__init__(f"Invalid flag provided: {flag}.")
 
 
-class TupleError(Exception):
+class TupleError(MazeConfigError):
     def __init__(self, point_name: str) -> None:
         super().__init__("Wrong number of coordinates"
                          f" provided for {point_name}")
 
 
-class MazeTooSmallError(Exception):
+class MazeTooSmallError(MazeConfigError):
     def __init__(self, maze_dimension: str, num: int) -> None:
         super().__init__(f"The {maze_dimension} of the maze is too small."
                          f" {maze_dimension.capitalize()} must"
