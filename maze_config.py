@@ -133,6 +133,9 @@ class MazeConfig:
                 raise LineSyntaxError(kv_pair[0])
             if key not in kv_dictionary.keys():
                 kv_dictionary[key] = kv_pair[1].strip()
+            else:
+                print(f"Duplicate key for {key} in configuration file: "
+                      f"'{kv_pair[0]}'. Discarding duplicate and continuing.")
         return kv_dictionary
 
     @staticmethod
