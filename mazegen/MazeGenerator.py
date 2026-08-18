@@ -1,6 +1,6 @@
 from random import Random
-from .config import MazeConfig
-from .cell import Cell, AutomatonCell, CellState
+from config import MazeConfig
+from cell import Cell, AutomatonCell, CellState
 
 
 TURN_PROB = 12

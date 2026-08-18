@@ -1,9 +1,9 @@
 import random
 from pydantic import BaseModel, Field
-from .cell import Cell
-from .MazeGenerator import generate_maze
-from .colours import ColourPair, COLOUR_PAIRS
-from .config import MazeConfig
+from cell import Cell
+from MazeGenerator import generate_maze
+from colours import ColourPair, COLOUR_PAIRS
+from config import MazeConfig
 
 
 class Maze(BaseModel):
