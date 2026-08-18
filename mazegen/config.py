@@ -11,11 +11,13 @@ class MazeConfig(BaseModel):
         entry (tuple[int, int]): The coordinates of the maze entry point (row, col).
         exit (tuple[int, int]): The coordinates of the maze exit point (row, col).
         seed (int): An optional seed for random number generation. If not provided, a random seed will be used.
-        perfect (bool): If True, generates a perfect maze (no loops).
+        perfect (bool): If True, generates a perfect maze (no loops). This set to True will override the braid option.
+        braid (bool): If True, generates a braided maze (a maze with loops and no dead ends).
     """
     width: int = Field(default=5, ge=5, le=50)
     height: int = Field(default=7, ge=7, le=50)
     entry: tuple[int, int]
     exit: tuple[int, int]
     seed: int | None = Field(default=None)
-    perfect: bool = Field(default=True)
+    perfect: bool = Field(default=False)
+    braid: bool = Field(default=False)

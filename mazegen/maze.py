@@ -1,9 +1,9 @@
 import random
 from pydantic import BaseModel, Field
-from mazegen.cell import Cell
-from mazegen.MazeGenerator import generate_maze
-from mazegen.colours import ColourPair, COLOUR_PAIRS
-from mazegen.config import MazeConfig
+from .cell import Cell
+from .MazeGenerator import generate_maze
+from .colours import ColourPair, COLOUR_PAIRS
+from .config import MazeConfig
 
 
 class Maze(BaseModel):
@@ -21,6 +21,7 @@ class Maze(BaseModel):
     show_path: bool = Field(default=False)
     grid: list[list['Cell']] = Field(default_factory=list[list['Cell']])
     path: list[tuple[int, int]] = Field(default_factory=list)
+    # TODO: Perhaps change to this -> path: list[str] = Field(default_factory=list)
 
     def generate(self) -> None:
         """
@@ -83,7 +84,7 @@ class Maze(BaseModel):
 
 
 if __name__ == "__main__":
-    maze_config = MazeConfig(width=25, height=20, entry=(0, 0), exit=(18, 13), perfect=False)
+    maze_config = MazeConfig(width=25, height=20, entry=(0, 0), exit=(18, 13), perfect=False, braid=True)
     maze = Maze(config=maze_config)
     maze.generate()
     maze.export(filename="output_file.txt")

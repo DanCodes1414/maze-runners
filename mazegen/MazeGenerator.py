@@ -1,15 +1,15 @@
 from random import Random
-from mazegen.config import MazeConfig
-from mazegen.cell import Cell, AutomatonCell, CellState
+from .config import MazeConfig
+from .cell import Cell, AutomatonCell, CellState
 
 
 TURN_PROB = 12
 BRANCH_PROB = 5
 directions = {
-    'N': (-1, 0),
-    'S': (1, 0),
-    'E': (0, 1),
-    'W': (0, -1)
+    "N": (-1, 0),
+    "S": (1, 0),
+    "E": (0, 1),
+    "W": (0, -1)
 }
 
 
@@ -19,13 +19,19 @@ class MazeConfigError(Exception):
 
 
 def wall_direction(direction: str) -> int:
-    if direction == 'N': return 1
-    elif direction == 'E': return 2
-    elif direction == 'S': return 4
+    """Returns the wall bit corresponding to the given direction."""
+    if direction == "N": return 1
+    elif direction == "E": return 2
+    elif direction == "S": return 4
     else: return 8
 
 
 def get_blocked_cells(rows: int, cols: int) -> set[tuple[int, int]]:
+    """
+    Returns a set of coordinates for cells that should be blocked in the maze.
+    The blocked cells are determined based on the maze dimensions
+    and are designed to create a 42 pattern at the centre of the maze.
+    """
     middle_row = (rows - 1) // 2
     middle_col = (cols - 1) // 2
     blocked_cells = {
@@ -64,10 +70,10 @@ def branching(cell: 'AutomatonCell', rand: Random) -> None:
 
 def reverse_direction(direction: str) -> str:
     """Returns the opposite direction of the given direction."""
-    if direction == 'N': return 'S'
-    elif direction == 'E': return 'W'
-    elif direction == 'S': return 'N'
-    else: return 'E'
+    if direction == "N": return "S"
+    elif direction == "E": return "W"
+    elif direction == "S": return "N"
+    else: return "E"
 
 
 def turn_direction(cell: AutomatonCell, rand: Random) -> str | None:
@@ -86,7 +92,7 @@ def turn_direction(cell: AutomatonCell, rand: Random) -> str | None:
         A direction string ('N', 'S', 'E', 'W') or None if no free neighbours.
     """
     if rand.randint(0, 100) <= TURN_PROB:
-        direction = rand.choice(['N', 'E', 'S', 'W'])
+        direction = rand.choice(["N", "E", "S", "W"])
     else:
         direction = reverse_direction(cell.parent)
 
@@ -178,7 +184,7 @@ def algorithm_step(grid: list[list['AutomatonCell']], rand: Random) -> list[list
         invite_cells = [cell for row in grid for cell in row if cell.state == CellState.INVITE]
         for invite_cell in invite_cells:
             invite_cell.state = CellState.SEED
-    cells = [cell for row in grid for cell in row if (cell.state != CellState.BLOCKED and cell.parent is not None)]
+    cells = [cell for row in grid for cell in row if (cell.state != CellState.BLOCKED and cell.parent)]
     for cell in cells:
         cell.walls -= wall_direction(cell.parent)
         parent_cell = grid[cell.row + directions[cell.parent][0]][cell.col + directions[cell.parent][1]]
@@ -225,7 +231,41 @@ def imperfect_maze(grid: list[list['AutomatonCell']], rand: Random) -> list[list
     return grid
 
 
-def create_exportable_grid(grid: list[list['AutomatonCell']]) -> list[list['Cell']]:
+def perfectly_braided_maze(grid: list[list['AutomatonCell']], rand: Random) -> list[list['AutomatonCell']]:
+    """
+    Braids the maze by removing all dead ends.
+    """
+    rows = len(grid)
+    cols = len(grid[0])
+
+    WALL_N, WALL_E, WALL_S, WALL_W = 1, 2, 4, 8
+    wall_directions = [
+        (WALL_E, WALL_W, 0, 1),
+        (WALL_S, WALL_N, 1, 0)
+    ]
+
+    for r in range(rows):
+        for c in range(cols):
+            current_cell = grid[r][c]
+            if current_cell.state == CellState.BLOCKED:
+                continue
+
+            wall_count = bin(current_cell.walls).count('1')
+            if wall_count == 3:
+                for wall_bit, opp_bit, dr, dc in wall_directions:
+                    if (current_cell.walls & wall_bit) != 0:
+                        nr, nc = r + dr, c + dc
+                        if 0 <= nr < rows and 0 <= nc < cols:
+                            neighbor_cell = grid[nr][nc]
+                            if neighbor_cell.state != CellState.BLOCKED:
+                                current_cell.walls &= ~wall_bit
+                                neighbor_cell.walls &= ~opp_bit
+                                break
+    return grid
+
+
+def create_simple_grid(grid: list[list['AutomatonCell']]) -> list[list['Cell']]:
+    """Converts the grid of AutomatonCells into a simpler grid of Cells."""
     rows = len(grid)
     cols = len(grid[0])
     simple_grid = [[Cell(row=r, col=c) for c in range(cols)] for r in range(rows)]
@@ -237,11 +277,14 @@ def create_exportable_grid(grid: list[list['AutomatonCell']]) -> list[list['Cell
 
 
 def generate_maze(maze_config: MazeConfig) -> list[list['Cell']]:
+    """Generates a maze based on the provided configuration."""
     grid = initialise_grid(maze_config.width, maze_config.height, maze_config.entry, maze_config.exit)
 
     rand = Random(maze_config.seed)
     grid = algorithm_step(grid, rand)
     if not maze_config.perfect:
         grid = imperfect_maze(grid, rand)
-    simple_grid = create_exportable_grid(grid)
+    if not maze_config.perfect and maze_config.braid:
+        grid = perfectly_braided_maze(grid, rand)
+    simple_grid = create_simple_grid(grid)
     return simple_grid

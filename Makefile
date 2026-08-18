@@ -20,6 +20,7 @@ lint-strict:
 
 clean:
 	rm -rf __pycache__ .mypy_cache
+	rm -rf mazegen/__pycache__ mazegen/.mypy_cache
 	find . -type f -name "*.txt" -not -name "config.txt" -not -name "requirements.txt" -delete
 
 .PHONY: install run debug clean lint lint-strict
