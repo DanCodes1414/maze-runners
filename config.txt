@@ -1,17 +1,19 @@
-WIDTH=32
+WIDTH=2
+Height = 2
+PERFECT=false
 #WIDTH=88
-HEIGHT=77
+#HEIGHT=77
  sod=
-ENTRY=2,5
+ENTRY=0, 0
 
- EXIT=2, 3
+ EXIT=1, 0
 OUTPUT_FILE=maze.txt
 #this is also a comment
 # this is a comment
   #   this is 
  #ttyty
 #  exit 19,14   
-PERFECT= true
+#PERFECT= false
    #ENtRY=5,6
 # SEED=44
-
+  BRAIDED  =True

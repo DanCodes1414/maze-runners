@@ -7,6 +7,12 @@ class MazeConfigError(Exception):
     pass
 
 
+class NegativeSeedError(MazeConfigError):
+    def __init__(self, seed_value: int) -> None:
+        super().__init__(f"Seed value is {seed_value}."
+                          "Seed value can't be negative")
+
+
 class InvalidCoordinateError(MazeConfigError):
     def __init__(self, dimension: int, dimension_name: str) -> None:
         super().__init__(f"{dimension_name} is {dimension}."
@@ -38,8 +44,8 @@ class PointError(MazeConfigError):
 
 
 class FlagError(MazeConfigError):
-    def __init__(self, flag: str) -> None:
-        super().__init__(f"Invalid flag provided: {flag}.")
+    def __init__(self, flag: str, flag_name: str) -> None:
+        super().__init__(f"Invalid {flag_name} flag provided: {flag}.")
 
 
 class TupleError(MazeConfigError):
@@ -49,18 +55,21 @@ class TupleError(MazeConfigError):
 
 
 class MazeTooSmallError(MazeConfigError):
-    def __init__(self, maze_dimension: str, num: int) -> None:
+    def __init__(self, maze_dimension: str, num: int, maze_type: str) -> None:
         super().__init__(f"The {maze_dimension} of the maze is too small."
                          f" {maze_dimension.capitalize()} must"
-                         f" be at least {num}.")
+                         f" be at least {num} in a {maze_type} maze.")
 
+class ContradictionError(MazeConfigError):
+    def __init__(self) -> None:
+        super().__init__("Maze cannot be both perfect and braided")
 
 class MazeConfig:
 
     mandatory_keys = ["WIDTH", "HEIGHT",
                       "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"]
 
-    additional_keys = ["SEED", "ALGORITHM", "DISPLAY_MODE"]
+    additional_keys = ["SEED", "BRAIDED"]
 
     @staticmethod
     def validate_dimension(dimension: int, dimension_name: str) -> int:
@@ -69,13 +78,20 @@ class MazeConfig:
         return dimension
 
     @staticmethod
-    def validate_maze_size(width: int, height: int) -> tuple[int, int]:
-        if width < 1:
-            raise MazeTooSmallError("width", 1)
-        if height < 1:
-            raise MazeTooSmallError("height", 1)
-        if width * height < 2:
-            raise MazeTooSmallError("area", 2)
+    def validate_maze(width: int, height: int,
+                      perfect_flag: bool) -> tuple[int, int]:
+        if perfect_flag:
+            if width < 1:
+                raise MazeTooSmallError("width", 1, "perfect")
+            if height < 1:
+                raise MazeTooSmallError("height", 1, "perfect")
+            if width * height < 2:
+                raise MazeTooSmallError("area", 2, "perfect")
+        else:
+            if width < 2:
+                raise MazeTooSmallError("width", 2, "imperfect")
+            if height < 2:
+                raise MazeTooSmallError("height", 2, "imperfect")
         return (width, height)
 
     @staticmethod
@@ -95,9 +111,13 @@ class MazeConfig:
 
     def __init__(self, output_filename: str, width: int, height: int,
                  entry_coords: tuple[int, int], exit_coords: tuple[int, int],
-                 perfect_flag: bool) -> None:
+                 perfect_flag: bool, braided_flag: bool | None,
+                 seed: int | None) -> None:
         self.output_filename = output_filename
-        self.width, self.height = MazeConfig.validate_maze_size(width, height)
+        self.perfect_flag = perfect_flag
+        self.width, self.height = MazeConfig.validate_maze(width,
+                                                           height,
+                                                           self.perfect_flag)
         maze_dimensions = (self.width, self.height)
         self.entry_point = MazeConfig.validate_point(
             "entry", entry_coords, maze_dimensions)
@@ -105,7 +125,12 @@ class MazeConfig:
             "exit", exit_coords, maze_dimensions)
         if (self.entry_point == self.exit_point):
             raise PointError()
-        self.perfect_flag = perfect_flag
+        self.braided_flag = braided_flag
+        if self.braided_flag and self.perfect_flag:
+            raise ContradictionError()
+        if seed and seed < 0:
+            raise NegativeSeedError(seed)
+        self.seed = seed
 
     @staticmethod
     def remove_comments_and_whitespace(content: str) -> list[str]:
@@ -169,12 +194,13 @@ class MazeConfig:
         return (x_coord, y_coord)
 
     @staticmethod
-    def get_flag(flag: str) -> bool:
+    def get_flag(kv_dictionary: dict[str, str], flag_name: str) -> bool:
+        flag = kv_dictionary[flag_name]
         if flag.capitalize() == "True":
             return True
         elif flag.capitalize() == "False":
             return False
-        raise FlagError(flag)
+        raise FlagError(flag, flag_name)
 
     @staticmethod
     def get_file(file_name: str) -> str:
@@ -191,10 +217,18 @@ class MazeConfig:
         if missing_keys:
             raise MissingKeyError(missing_keys)
         output_filename = cls.get_file(kv_dictionary["OUTPUT_FILE"]) #I still haven't written this 
-        perfect_flag = cls.get_flag(kv_dictionary["PERFECT"])
-        width = cls.get_dimension(kv_dictionary["WIDTH"], "WIDTH") #min width and min height are both contingent on the perfect flag if flag==false min size is a 2x2 because it needs multiple routes.
+        perfect_flag = cls.get_flag(kv_dictionary, "PERFECT")
+        if "BRAIDED" in kv_dictionary:
+            braided_flag = cls.get_flag(kv_dictionary, "BRAIDED")
+        else:
+            braided_flag = None
+        width = cls.get_dimension(kv_dictionary["WIDTH"], "WIDTH")
         height = cls.get_dimension(kv_dictionary["HEIGHT"], "HEIGHT")
+        if "SEED" in kv_dictionary:
+            seed = cls.get_dimension(kv_dictionary["SEED"], "SEED")
+        else:
+            seed = None
         entry_point = cls.get_point(kv_dictionary, "ENTRY")
         exit_point = cls.get_point(kv_dictionary, "EXIT")
         return cls(output_filename, width, height, entry_point,
-                   exit_point, perfect_flag)
+                   exit_point, perfect_flag, braided_flag, seed)

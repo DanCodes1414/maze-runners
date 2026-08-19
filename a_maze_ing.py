@@ -12,7 +12,7 @@ def main() -> int:
         return 1
     try:
         maze_config = MazeConfig.get_config_from_file(sys.argv[1])
-    except (MazeConfigError, ValueError, OSError, UnicodeDecodeError) as e:
+    except (MazeConfigError, ValueError, OSError) as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
     else:
@@ -22,6 +22,7 @@ def main() -> int:
         print(maze_config.exit_point)
         print(maze_config.output_filename)
         print(maze_config.perfect_flag)
+        print(maze_config.braided_flag)
     return 0
 
 
