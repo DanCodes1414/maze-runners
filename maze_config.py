@@ -10,7 +10,7 @@ class MazeConfigError(Exception):
 class NegativeSeedError(MazeConfigError):
     def __init__(self, seed_value: int) -> None:
         super().__init__(f"Seed value is {seed_value}."
-                          "Seed value can't be negative")
+                         "Seed value can't be negative")
 
 
 class InvalidCoordinateError(MazeConfigError):
@@ -60,9 +60,11 @@ class MazeTooSmallError(MazeConfigError):
                          f" {maze_dimension.capitalize()} must"
                          f" be at least {num} in a {maze_type} maze.")
 
+
 class ContradictionError(MazeConfigError):
     def __init__(self) -> None:
         super().__init__("Maze cannot be both perfect and braided")
+
 
 class MazeConfig:
 
@@ -128,9 +130,10 @@ class MazeConfig:
         self.braided_flag = braided_flag
         if self.braided_flag and self.perfect_flag:
             raise ContradictionError()
-        if seed and seed < 0:
-            raise NegativeSeedError(seed)
-        self.seed = seed
+        if seed:
+            self.seed = self.validate_dimension(seed, "SEED")
+        else:
+            self.seed = seed
 
     @staticmethod
     def remove_comments_and_whitespace(content: str) -> list[str]:

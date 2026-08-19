@@ -23,6 +23,7 @@ def main() -> int:
         print(maze_config.output_filename)
         print(maze_config.perfect_flag)
         print(maze_config.braided_flag)
+        print(maze_config.seed)
     return 0
 
 
