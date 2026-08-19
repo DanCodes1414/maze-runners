@@ -1,9 +1,9 @@
 import random
 from pydantic import BaseModel, Field
-from cell import Cell
-from MazeGenerator import generate_maze
-from colours import ColourPair, COLOUR_PAIRS
-from config import MazeConfig
+from .cell import Cell
+from .generator import MazeGenerator, MazeConfigError
+from .colours import ColourPair, COLOUR_PAIRS
+from .config import MazeConfig
 
 
 class Maze(BaseModel):
@@ -27,7 +27,13 @@ class Maze(BaseModel):
         """
         Generates the maze using a maze generation algorithm and updates the grid attribute.
         """
-        self.grid = generate_maze(maze_config=self.config)
+        try:
+            generator = MazeGenerator(self.config)
+            self.grid = generator.generate()
+        except MazeConfigError as ce:
+            print(f"Configuration error: {ce}")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
 
     def solve(self) -> None:
         """
@@ -37,6 +43,7 @@ class Maze(BaseModel):
             raise RuntimeError("Maze grid is not generated. Call generate() before solving.")
         pass
 
+    # TODO: Remove this method?
     def render(self) -> None:
         """
         Renders the maze visually in the console or a graphical interface.

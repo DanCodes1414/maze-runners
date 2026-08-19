@@ -1,6 +1,6 @@
 from random import Random
-from config import MazeConfig
-from cell import Cell, AutomatonCell, CellState
+from .config import MazeConfig
+from .cell import Cell, AutomatonCell, CellState
 
 
 TURN_PROB = 12
@@ -276,15 +276,31 @@ def create_simple_grid(grid: list[list['AutomatonCell']]) -> list[list['Cell']]:
     return simple_grid
 
 
-def generate_maze(maze_config: MazeConfig) -> list[list['Cell']]:
-    """Generates a maze based on the provided configuration."""
-    grid = initialise_grid(maze_config.width, maze_config.height, maze_config.entry, maze_config.exit)
+class MazeGenerator:
+    """
+    A class to generate mazes using the Cell Automaton algorithm.
 
-    rand = Random(maze_config.seed)
-    grid = algorithm_step(grid, rand)
-    if not maze_config.perfect:
-        grid = imperfect_maze(grid, rand)
-    if not maze_config.perfect and maze_config.braid:
-        grid = perfectly_braided_maze(grid, rand)
-    simple_grid = create_simple_grid(grid)
-    return simple_grid
+    Attributes:
+        config (MazeConfig): The configuration for generating the maze.
+        grid (list[list[AutomatonCell]]): A 2D list representing the maze grid with AutomatonCell objects.
+    """
+    def __init__(self, config: MazeConfig):
+        self.config = config
+        self.grid: list[list['AutomatonCell']] = []
+
+    def generate(self) -> list[list['Cell']]:
+        """
+        Generates a maze based on the provided configuration.
+
+        Returns:
+            list[list[Cell]]: A 2D list representing the generated maze grid with Cell objects.
+        """
+        self.grid = initialise_grid(self.config.width, self.config.height, self.config.entry, self.config.exit)
+        rand = Random(self.config.seed)
+        self.grid = algorithm_step(self.grid, rand)
+        if not self.config.perfect:
+            self.grid = imperfect_maze(self.grid, rand)
+        if not self.config.perfect and self.config.braid:
+            self.grid = perfectly_braided_maze(self.grid, rand)
+        simple_grid = create_simple_grid(self.grid)
+        return simple_grid

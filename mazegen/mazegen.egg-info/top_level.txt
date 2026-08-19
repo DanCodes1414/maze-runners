@@ -1,5 +1,0 @@
-MazeGenerator
-cell
-colours
-config
-maze

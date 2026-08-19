@@ -1,10 +1,12 @@
-MazeGenerator.py
+LICENSE.md
 README.md
-cell.py
-colours.py
-config.py
-maze.py
 setup.py
+mazegen/__init__.py
+mazegen/cell.py
+mazegen/colours.py
+mazegen/config.py
+mazegen/generator.py
+mazegen/maze.py
 mazegen.egg-info/PKG-INFO
 mazegen.egg-info/SOURCES.txt
 mazegen.egg-info/dependency_links.txt
