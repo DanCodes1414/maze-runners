@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import sys
+
 
 class MazeConfigError(Exception):
     pass
@@ -26,7 +28,8 @@ class LineSyntaxError(MazeConfigError):
 
 class MissingKeyError(MazeConfigError):
     def __init__(self, missing_keys: list[str]) -> None:
-        super().__init__(f"The following keys are missing: {missing_keys}")
+        super().__init__(f"The following mandatory keys "
+                         f"are missing: {missing_keys}")
 
 
 class PointError(MazeConfigError):
@@ -57,7 +60,7 @@ class MazeConfig:
     mandatory_keys = ["WIDTH", "HEIGHT",
                       "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"]
 
-    # additional_keys = ["SEED", "ALGORITHM", "DISPLAY_MODE"]
+    additional_keys = ["SEED", "ALGORITHM", "DISPLAY_MODE"]
 
     @staticmethod
     def validate_dimension(dimension: int, dimension_name: str) -> int:
@@ -122,19 +125,26 @@ class MazeConfig:
                 missing_keys.append(mandatory_key)
         return missing_keys
 
-    @staticmethod
-    def create_kv_dictionary(non_comment_lines: list[str]) -> dict[str, str]:
+    @classmethod
+    def create_kv_dictionary(cls,
+                             non_comment_lines: list[str]) -> dict[str, str]:
         kv_dictionary: dict[str, str] = {}
+        recognised_keys = cls.mandatory_keys + cls.additional_keys
         for line in non_comment_lines:
             kv_pair = line.split('=', 1)
             key = kv_pair[0].upper().strip()
             if len(kv_pair) < 2:
                 raise LineSyntaxError(kv_pair[0])
-            if key not in kv_dictionary.keys():
-                kv_dictionary[key] = kv_pair[1].strip()
-            else:
-                print(f"Duplicate key for {key} in configuration file: "
-                      f"'{kv_pair[0]}'. Discarding duplicate and continuing.")
+            if key in recognised_keys:
+                value = kv_pair[1].strip()
+                if not value:
+                    raise LineSyntaxError(line)
+                if key in kv_dictionary:
+                    print(f"Duplicate key for {key} in configuration file: "
+                          f"'{kv_pair[0]}'. Discarding duplicate "
+                          "and continuing.", file=sys.stderr)
+                else:
+                    kv_dictionary[key] = value
         return kv_dictionary
 
     @staticmethod
