@@ -107,13 +107,12 @@ class MazeConfig:
     @staticmethod
     def remove_comments_and_whitespace(content: str) -> list[str]:
         lines = content.split('\n')
-        i = 0
-        while i < len(lines):
-            if not lines[i].strip() or ((lines[i]).strip())[0] == '#':
-                lines.remove(lines[i])
-            else:
-                i += 1
-        return [line.strip() for line in lines]
+        non_comment_or_whitespace_lines: list[str] = []
+        for line in lines:
+            line = line.strip()
+            if line and line[0] != '#':
+                non_comment_or_whitespace_lines.append(line)
+        return non_comment_or_whitespace_lines
 
     @classmethod
     def get_missing_keys(cls, kv_dictionary: dict[str, str]) -> list[str]:
