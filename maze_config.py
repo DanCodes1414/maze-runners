@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import os
 
 
 class MazeConfigError(Exception):
@@ -10,7 +11,7 @@ class MazeConfigError(Exception):
 class NegativeSeedError(MazeConfigError):
     def __init__(self, seed_value: int) -> None:
         super().__init__(f"Seed value is {seed_value}."
-                         "Seed value can't be negative")
+                         " Seed value can't be negative")
 
 
 class InvalidCoordinateError(MazeConfigError):
@@ -39,6 +40,9 @@ class MissingKeyError(MazeConfigError):
 
 
 class PointError(MazeConfigError):
+    """
+    Gets raised if entry and exit points of maze share the same coordinates
+    """
     def __init__(self) -> None:
         super().__init__("Entry and exit points cannot be the same.")
 
@@ -61,7 +65,16 @@ class MazeTooSmallError(MazeConfigError):
                          f" be at least {num} in a {maze_type} maze.")
 
 
+class OutputFilenameError(MazeConfigError):
+    pass
+
+
 class ContradictionError(MazeConfigError):
+    """
+    Gets raised if both BRAIDED and PERFECT flags are true.
+    By definition, a BRAIDED maze is non-perfect (see subject)
+    so both flags being true is a contradiction.
+    """
     def __init__(self) -> None:
         super().__init__("Maze cannot be both perfect and braided")
 
@@ -130,7 +143,8 @@ class MazeConfig:
         self.braided_flag = braided_flag
         if self.braided_flag and self.perfect_flag:
             raise ContradictionError()
-        if seed:
+        self.seed: int | None
+        if seed is not None:
             self.seed = self.validate_dimension(seed, "SEED")
         else:
             self.seed = seed
@@ -206,20 +220,27 @@ class MazeConfig:
         raise FlagError(flag, flag_name)
 
     @staticmethod
-    def get_file(file_name: str) -> str:
-        ...
-        return file_name
+    def get_file(output_filename: str, config_filename: str) -> str:
+        output_filename_path = os.path.realpath(output_filename)
+        config_filename_path = os.path.realpath(config_filename)
+        if '/' in output_filename:
+            raise OutputFilenameError("OUTPUT_FILE does not accept paths.")
+        if output_filename_path == config_filename_path:
+            raise OutputFilenameError("OUTPUT_FILE can't"
+                                      " be the same as config filename.")
+        return output_filename
 
     @classmethod
-    def get_config_from_file(cls, filename: str) -> "MazeConfig":
-        with open(filename) as f:
+    def get_config_from_file(cls, config_filename: str) -> "MazeConfig":
+        with open(config_filename) as f:
             content = f.read()
         non_comment_lines = cls.remove_comments_and_whitespace(content)
         kv_dictionary = cls.create_kv_dictionary(non_comment_lines)
         missing_keys = cls.get_missing_keys(kv_dictionary)
         if missing_keys:
             raise MissingKeyError(missing_keys)
-        output_filename = cls.get_file(kv_dictionary["OUTPUT_FILE"]) #I still haven't written this 
+        output_filename = cls.get_file(kv_dictionary["OUTPUT_FILE"],
+                                       config_filename)
         perfect_flag = cls.get_flag(kv_dictionary, "PERFECT")
         if "BRAIDED" in kv_dictionary:
             braided_flag = cls.get_flag(kv_dictionary, "BRAIDED")
