@@ -4,7 +4,7 @@ PERFECT=false
 #WIDTH=88
 #HEIGHT=77
  sod=
-ENTRY=0, 0
+pot=
 
  EXIT=1, 0
 OUTPUT_FILE= config.txt  
