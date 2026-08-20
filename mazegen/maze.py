@@ -115,13 +115,3 @@ class Maze(BaseModel):
                 f.write(f"{shortest_path}\n")
         except Exception as e:
             print(f"Error exporting maze to file: {e}")
-
-
-if __name__ == "__main__":
-    try:
-        config = MazeConfig(width=8, height=6, entry=(1, 2), exit=(1, 4), output_file="maze_output.txt")
-        maze = Maze(config=config)
-        maze.generate()
-        maze.export()
-    except Exception as e:
-        print(f"Error creating maze config: {e}")
