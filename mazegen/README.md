@@ -21,10 +21,13 @@ To import this module into your own project, follow these steps:
 from mazegen.maze import Maze
 from mazegen.config import MazeConfig
 
-maze_config = MazeConfig(width=25, height=20, entry=(0, 0), exit=(18, 13), perfect=False, braid=False)
+maze_config = MazeConfig(
+    width=25, height=20, entry=(0, 0), exit=(18, 13), perfect=False, braid=False, output_file="output.txt"
+)
 maze = Maze(config=maze_config)
 maze.generate()
-maze.export(filename="output_file.txt")
+maze.solve()
+maze.export()
 ```
 
 ---
@@ -43,6 +46,7 @@ The `MazeConfig` class contains the configuration required to generate a maze.
 - seed: An optional seed for random number generation for maze reproducibility. If not provided, a random seed will be used.
 - perfect: If True, generates a perfect maze (no loops). This set to True will override the braid option.
 - braid: If True, generates a braided maze (a maze with loops and no dead ends).
+- output_file: The name of the output file where the maze will be exported.
 
 ### Maze Class
 The `Maze` class stores the maze details and has functions to generate, solve and export the maze.

@@ -30,8 +30,12 @@ def get_blocked_cells(rows: int, cols: int) -> set[tuple[int, int]]:
     """
     Returns a set of coordinates for cells that should be blocked in the maze.
     The blocked cells are determined based on the maze dimensions
-    and are designed to create a 42 pattern at the centre of the maze.
+    and are designed to create a 42 pattern at the centre of the maze.\n
+    If the maze dimensions are too small for the 42 pattern, no cells will be blocked.
     """
+    if rows < 6 or cols < 8:
+        return set()
+
     middle_row = (rows - 1) // 2
     middle_col = (cols - 1) // 2
     blocked_cells = {
@@ -120,24 +124,27 @@ def update_free_neighbours(cell: 'AutomatonCell', grid: list[list['AutomatonCell
                 cell.free_neighbours.append(direction)
 
 
-def initialise_grid(rows: int, cols: int, start: tuple[int, int], end: tuple[int, int]) -> list[list['AutomatonCell']]:
+def initialise_grid(config:MazeConfig) -> list[list['AutomatonCell']]:
     """
     Initialises a grid of AutomatonCells with the specified dimensions.
     """
-    if rows < 5 or cols < 7:
-        raise MazeConfigError("Maze dimensions must be at least 5x7.")
-    grid = [[AutomatonCell(row=r, col=c) for c in range(cols)] for r in range(rows)]
-    blocked_cells = get_blocked_cells(rows, cols)
-    if start in blocked_cells or end in blocked_cells:
-        raise MazeConfigError("Start and end cells cannot be in blocked cells.")
-    for r in range(rows):
-        for c in range(cols):
+    # TODO: Leave validation to MazeConfig class
+    if (config.width < 2 or config.height < 2) and not config.perfect:
+        raise MazeConfigError("Maze dimensions must be at least 2x2 for non-perfect mazes.")
+    if config.width < 2 and config.height < 2 and config.perfect:
+        raise MazeConfigError("Maze dimensions must be at least 1x2 or 2x1 for perfect mazes.")
+    grid = [[AutomatonCell(row=r, col=c) for c in range(config.width)] for r in range(config.height)]
+    blocked_cells = get_blocked_cells(config.height, config.width)
+    if config.entry in blocked_cells or config.exit in blocked_cells:
+        raise MazeConfigError("Entry and exit cells cannot be in blocked cells.")
+    for r in range(config.height):
+        for c in range(config.width):
             if (r, c) in blocked_cells:
                 grid[r][c].state = CellState.BLOCKED
-            if (r, c) == start:
+            if (r, c) == config.entry:
                 grid[r][c].state = CellState.SEED
-    for r in range(rows):
-        for c in range(cols):
+    for r in range(config.height):
+        for c in range(config.width):
             update_free_neighbours(grid[r][c], grid)
     return grid
 
@@ -295,7 +302,7 @@ class MazeGenerator:
         Returns:
             list[list[Cell]]: A 2D list representing the generated maze grid with Cell objects.
         """
-        self.grid = initialise_grid(self.config.width, self.config.height, self.config.entry, self.config.exit)
+        self.grid = initialise_grid(self.config)
         rand = Random(self.config.seed)
         self.grid = algorithm_step(self.grid, rand)
         if not self.config.perfect:

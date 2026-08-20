@@ -2,6 +2,7 @@ import random
 from pydantic import BaseModel, Field
 from .cell import Cell
 from .generator import MazeGenerator, MazeConfigError
+from .solver import MazeSolver
 from .colours import ColourPair, COLOUR_PAIRS
 from .config import MazeConfig
 
@@ -15,21 +16,25 @@ class Maze(BaseModel):
         colours (str): Color codes for rendering the maze.
         grid (list[list[Cell]]): A 2D list representing the maze grid with Cell objects.
         path (list[tuple[int, int]]): A list of coordinates representing the generated path from entry to exit.
+        generated (bool): A flag indicating whether the maze has been generated.
     """
     config: MazeConfig
     colours: ColourPair = Field(default=COLOUR_PAIRS[0])
     show_path: bool = Field(default=False)
     grid: list[list['Cell']] = Field(default_factory=list[list['Cell']])
-    path: list[tuple[int, int]] = Field(default_factory=list)
-    # TODO: Perhaps change to this -> path: list[str] = Field(default_factory=list)
+    path: list[tuple[int, int]] = Field(default_factory=list) # TODO: Perhaps change to this -> path: list[str] = Field(default_factory=list)
+    generated: bool = Field(default=False, exclude=True)
 
     def generate(self) -> None:
         """
         Generates the maze using a maze generation algorithm and updates the grid attribute.
         """
+        # TODO: Add config validation here to ensure the config is valid before generating the maze.
+
         try:
             generator = MazeGenerator(self.config)
             self.grid = generator.generate()
+            self.generated = True
         except MazeConfigError as ce:
             print(f"Configuration error: {ce}")
         except Exception as e:
@@ -39,17 +44,21 @@ class Maze(BaseModel):
         """
         Solves the maze using a pathfinding algorithm (e.g., A* or BFS) and updates the path attribute.
         """
-        if not self.grid:
+        if not self.generated:
             raise RuntimeError("Maze grid is not generated. Call generate() before solving.")
-        pass
+        try:
+            solver = MazeSolver(self.config)
+            self.path = solver.solve()
+        except Exception as e:
+            print(f"Unexpected error: {e}")
 
     # TODO: Remove this method?
     def render(self) -> None:
         """
         Renders the maze visually in the console or a graphical interface.
         """
-        if not self.grid:
-            raise RuntimeError("Maze grid is not generated. Call generate() before solving.")
+        if not self.generated:
+            raise RuntimeError("Maze grid is not generated. Call generate() before rendering.")
         pass
 
     def switch_colours(self) -> None:
@@ -61,37 +70,58 @@ class Maze(BaseModel):
             new_colour_pair = random.Random().choice(COLOUR_PAIRS)
         self.colours = new_colour_pair
 
-    def export(self, filename: str = "output_file.txt") -> None:
+    def export(self) -> None:
         """
         Exports the maze to a template file.
         """
-        if not self.grid:
-            raise RuntimeError("Maze grid is not generated. Call generate() before solving.")
-
-        rows = len(self.grid)
-        cols = len(self.grid[0])
+        if not self.generated:
+            raise RuntimeError("Maze grid is not generated. Call generate() before exporting.")
 
         grid_lines = []
-        for r in range(rows):
+        for r in range(self.config.height):
             row_chars = []
-            for c in range(cols):
+            for c in range(self.config.width):
                 cell = self.grid[r][c]
-                row_chars.append(format(cell.walls, 'x'))
+                row_chars.append(cell.hex_representation())
             grid_lines.append("".join(row_chars))
 
+        if not len(self.path):
+            self.solve()
+        directions = {
+            "N": (-1, 0),
+            "S": (1, 0),
+            "E": (0, 1),
+            "W": (0, -1)
+        }
         shortest_path = ""
-        # TODO: Implement pathfinding algorithm to find the shortest path and update the shortest_path variable.
+        for i in range(len(self.path) - 1):
+            current_r, current_c = self.path[i]
+            next_r, next_c = self.path[i + 1]
+            dr = next_r - current_r
+            dc = next_c - current_c
+            direction = None
+            for dir_key, (dir_r, dir_c) in directions.items():
+                if (dr, dc) == (dir_r, dir_c):
+                    direction = dir_key
+                    break
+            shortest_path += direction
 
-        with open(filename, 'w') as f:
-            for line in grid_lines:
-                f.write(line + "\n")
-            f.write(f"\n{self.config.entry[0] + 1},{self.config.entry[1] + 1}\n")
-            f.write(f"{self.config.exit[0] + 1},{self.config.exit[1] + 1}\n")
-            f.write(f"{shortest_path}\n")
+        try:
+            with open(self.config.output_file, 'w') as f:
+                for line in grid_lines:
+                    f.write(line + "\n")
+                f.write(f"\n{self.config.entry[0]},{self.config.entry[1]}\n")
+                f.write(f"{self.config.exit[0]},{self.config.exit[1]}\n")
+                f.write(f"{shortest_path}\n")
+        except Exception as e:
+            print(f"Error exporting maze to file: {e}")
 
 
 if __name__ == "__main__":
-    maze_config = MazeConfig(width=25, height=20, entry=(0, 0), exit=(18, 13), perfect=False, braid=True)
-    maze = Maze(config=maze_config)
-    maze.generate()
-    maze.export(filename="output_file.txt")
+    try:
+        config = MazeConfig(width=8, height=6, entry=(1, 2), exit=(1, 4), output_file="maze_output.txt")
+        maze = Maze(config=config)
+        maze.generate()
+        maze.export()
+    except Exception as e:
+        print(f"Error creating maze config: {e}")

@@ -1,14 +1,15 @@
 NAME = a_maze_ing.py
+CONFIG = config.txt
 
 install:
 	python3 -m pip install -U flake8 mypy
 	python3 -m pip install -r requirements.txt
 
 run:
-	python3 $(NAME)
+	python3 $(NAME) $(CONFIG)
 
 debug:
-	python3 -m pdb $(NAME)
+	python3 -m pdb $(NAME) $(CONFIG)
 
 lint:
 	flake8

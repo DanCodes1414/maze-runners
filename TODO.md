@@ -6,7 +6,7 @@
 - [ ] Runtime errors handled?
 - [ ] Docstrings included?
 - [x] .gitignore included?
-- [ ] LICENSE.md included?
+- [x] LICENSE.md included?
 - [ ] Use venv/pyenv for dependency isolation 
 - [ ] `a_maze_ing.py` as main project file
 - [ ] Both evaluatees fully understand the project and our code?
@@ -25,14 +25,13 @@
 
 
 ## Maze Generation (dqureshi)
-- [ ] External walls are fully covered (no escaping via the edge of the maze!)
-- [ ] No blocked off or isolated cells (except for the 42 logo)
-- [ ] Neighbouring cells must have walls touching each other (i.e, if there is a wall on the east for Cell 1, there must be a wall on the west for Cell 2)
+- [x] External walls are fully covered (no escaping via the edge of the maze!)
+- [x] No blocked off or isolated cells (except for the 42 logo)
+- [x] Neighbouring cells must have walls touching each other (i.e, if there is a wall on the east for Cell 1, there must be a wall on the west for Cell 2)
 - [ ] There cannot be a 3x3 open area
-- [ ] 42 logo displayed with fully closed cells
-- [ ] If the PERFECT flag is activated, the maze contains exactly 1 path between the entry and exit?
-- [ ] Reproducibility via a seed
-- [ ] BONUS: Is the second algorithm implemented?
+- [x] 42 logo displayed with fully closed cells
+- [x] If the PERFECT flag is activated, the maze contains exactly 1 path between the entry and exit?
+- [x] Reproducibility via a seed
 
 
 ## Output file (dqureshi)
@@ -76,11 +75,11 @@
 - [x] **lint**: `flake8 .` and `mypy . --warn-return-any
 --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs
 --check-untyped-defs`
-- [ ] **lint-strict**: `flake8 .` and `mypy --strict .
+- [x] **lint-strict**: `flake8 .` and `mypy --strict .
 
 
 ## Testing (dqureshi)
-- [ ] Test stand-alone module in a virtual-env.
+- [x] Test stand-alone module in a virtual-env.
 
 
 ## README
@@ -99,4 +98,4 @@
 ## Bonuses?
 - [ ] Animations
 - [ ] Another maze algorithm
-- [ ] Maze with 0 dead-ends
+- [x] Maze with 0 dead-ends

@@ -54,3 +54,7 @@ class Cell(BaseModel):
     def is_blocked(self) -> bool:
         """Checks if the cell is blocked."""
         return self.walls == 15
+
+    def hex_representation(self) -> str:
+        """Returns the hexadecimal representation of the cell's walls."""
+        return format(self.walls, 'x')
