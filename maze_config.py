@@ -108,6 +108,42 @@ class MazeConfig:
 
     additional_keys = ["SEED", "BRAIDED"]
 
+    def __init__(self, output_filename: str, width: int, height: int,
+                 entry_coords: tuple[int, int], exit_coords: tuple[int, int],
+                 perfect_flag: bool, braided_flag: bool | None = None,
+                 seed: int | None = None) -> None:
+        """Validate the given parameters and store them as attributes.
+
+        output_filename is stored as given. width and height are checked
+        with validate_maze, entry_coords and exit_coords with
+        validate_point, and seed (when not None) with validate_dimension;
+        any error those raise is propagated.
+
+        Raise PointError if entry_coords and exit_coords are equal.
+        Raise ContradictionError if perfect_flag and braided_flag are
+        both True.
+        """
+        self.output_filename = output_filename
+        self.perfect_flag = perfect_flag
+        self.width, self.height = MazeConfig.validate_maze(width,
+                                                           height,
+                                                           self.perfect_flag)
+        maze_dimensions = (self.width, self.height)
+        self.entry_point = MazeConfig.validate_point(
+            "ENTRY", entry_coords, maze_dimensions)
+        self.exit_point = MazeConfig.validate_point(
+            "EXIT", exit_coords, maze_dimensions)
+        if (self.entry_point == self.exit_point):
+            raise PointError()
+        self.braided_flag = braided_flag
+        if self.braided_flag and self.perfect_flag:
+            raise ContradictionError()
+        self.seed: int | None
+        if seed is not None:
+            self.seed = self.validate_dimension(seed, "SEED")
+        else:
+            self.seed = seed
+
     @staticmethod
     def validate_dimension(dimension_value: int, dimension_name: str) -> int:
         """Return dimension_value unchanged if it is non-negative.
@@ -172,42 +208,6 @@ class MazeConfig:
             raise PointOutOfBoundsError(point_coords, point_name,
                                         "y-coordinate", maze_dimensions[1] - 1)
         return point_coords
-
-    def __init__(self, output_filename: str, width: int, height: int,
-                 entry_coords: tuple[int, int], exit_coords: tuple[int, int],
-                 perfect_flag: bool, braided_flag: bool | None = None,
-                 seed: int | None = None) -> None:
-        """Validate the given parameters and store them as attributes.
-
-        output_filename is stored as given. width and height are checked
-        with validate_maze, entry_coords and exit_coords with
-        validate_point, and seed (when not None) with validate_dimension;
-        any error those raise is propagated.
-
-        Raise PointError if entry_coords and exit_coords are equal.
-        Raise ContradictionError if perfect_flag and braided_flag are
-        both True.
-        """
-        self.output_filename = output_filename
-        self.perfect_flag = perfect_flag
-        self.width, self.height = MazeConfig.validate_maze(width,
-                                                           height,
-                                                           self.perfect_flag)
-        maze_dimensions = (self.width, self.height)
-        self.entry_point = MazeConfig.validate_point(
-            "ENTRY", entry_coords, maze_dimensions)
-        self.exit_point = MazeConfig.validate_point(
-            "EXIT", exit_coords, maze_dimensions)
-        if (self.entry_point == self.exit_point):
-            raise PointError()
-        self.braided_flag = braided_flag
-        if self.braided_flag and self.perfect_flag:
-            raise ContradictionError()
-        self.seed: int | None
-        if seed is not None:
-            self.seed = self.validate_dimension(seed, "SEED")
-        else:
-            self.seed = seed
 
     @staticmethod
     def remove_comments_and_whitespace(content: str) -> list[str]:
