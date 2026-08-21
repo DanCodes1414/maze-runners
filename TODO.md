@@ -21,10 +21,9 @@
 - [x] Define minimum maze size (depending on Perfect flag)
 - [x] Check that config.txt is a plain text file
 - [x] BONUS: parsing for the SEED flag
-- [ ] Check that the output_filename is valid (write parsing in MazeConfig.get_file)
-- [ ] BONUS: parsing for the ALGORITHM flag
-- [ ] BONUS: parsing for the DISPLAY_MODE flag
-- [ ] Write doctrings
+- [x] Check that the output_filename is valid (write parsing in MazeConfig.get_file)
+- [x] Write doctrings
+- [ ] Write check for valid starting and exit points if 42 logo is present
 
 ## Maze Generation (dqureshi)
 - [ ] External walls are fully covered (no escaping via the edge of the maze!)

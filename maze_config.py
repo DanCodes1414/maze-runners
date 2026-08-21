@@ -175,8 +175,8 @@ class MazeConfig:
 
     def __init__(self, output_filename: str, width: int, height: int,
                  entry_coords: tuple[int, int], exit_coords: tuple[int, int],
-                 perfect_flag: bool, braided_flag: bool | None,
-                 seed: int | None) -> None:
+                 perfect_flag: bool, braided_flag: bool | None = None,
+                 seed: int | None = None) -> None:
         """Validate the given parameters and store them as attributes.
 
         output_filename is stored as given. width and height are checked
