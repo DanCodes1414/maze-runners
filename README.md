@@ -96,7 +96,7 @@ SEED=42
 Configuration handling lives in `maze_config.py`, which is independent of the
 generator and the display.
 
-- `MazeConfig.get_config_from_file(path)` reads, parses and validates a
+- `MazeConfig.parse_config_from_file(path)` reads, parses and validates a
   configuration file and returns a `MazeConfig` instance. This is the entry
   point used by `a_maze_ing.py`.
 - `MazeConfig(...)` can also be constructed directly with already-parsed values,
@@ -109,7 +109,7 @@ generator and the display.
 from maze_config import MazeConfig, MazeConfigError
 
 try:
-    maze_config = MazeConfig.get_config_from_file("config.txt")
+    maze_config = MazeConfig.parse_config_from_file("config.txt")
 except (MazeConfigError, ValueError, OSError) as e:
     print(f"Error: {e}")
 ```

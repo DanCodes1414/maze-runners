@@ -11,7 +11,7 @@ def main() -> int:
               file=sys.stderr)
         return 1
     try:
-        maze_config = MazeConfig.get_config_from_file(sys.argv[1])
+        maze_config = MazeConfig.parse_config_from_file(sys.argv[1])
     except (MazeConfigError, ValueError, OSError) as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
