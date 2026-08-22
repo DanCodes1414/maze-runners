@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 
-"""Parse and validate A-Maze-ing configuration files.
+"""Validated maze parameters for the A-Maze-ing generator.
 
-Exposes the MazeConfig class, which reads a KEY=VALUE configuration
-file and produces a validated set of maze parameters, plus the
-MazeConfigError hierarchy used to report every validation failure.
+Exposes the MazeConfig class, which checks that a set of maze
+parameters (dimensions, entry and exit points, flags, seed) describe
+a maze that can be generated. Parsing a configuration file into those
+parameters is handled separately by config_parser.
 """
 
 import config_errors as errors
-import config_parser as parser
 
 
 class MazeConfig:
-    """Validated maze parameters read from a configuration file.
+    """Validated maze parameters.
 
-    Instances are normally created through parse_config_from_file rather
-    than the constructor directly.
+    The constructor validates raw values directly. To build an instance
+    from a configuration file, use config_parser.parse_config_from_file.
     """
 
     def __init__(self, output_filename: str, width: int, height: int,
@@ -120,42 +120,3 @@ class MazeConfig:
                                                "y-coordinate",
                                                maze_dimensions[1] - 1)
         return point_coords
-
-    @classmethod
-    def parse_config_from_file(cls, config_filename: str) -> "MazeConfig":
-        """Return a MazeConfig built from the file at config_filename.
-
-        Read the file, strip comments, parse KEY=VALUE lines and
-        validate the result. This is the intended way to create a
-        MazeConfig.
-
-        Raise OSError if the file cannot be read.
-        Raise ValueError if a numeric value cannot be parsed.
-        Raise a MazeConfigError subclass if the file is malformed or
-        describes an impossible maze; see the individual exception
-        classes for the specific conditions.
-        """
-        with open(config_filename) as f:
-            content = f.read()
-        non_comment_lines = parser.remove_comments_and_whitespace(content)
-        kv_dictionary = parser.create_kv_dictionary(non_comment_lines)
-        missing_keys = parser.parse_missing_keys(kv_dictionary)
-        if missing_keys:
-            raise errors.MissingKeyError(missing_keys)
-        output_filename = parser.parse_file(kv_dictionary["OUTPUT_FILE"],
-                                            config_filename)
-        perfect_flag = parser.parse_flag(kv_dictionary, "PERFECT")
-        if "BRAIDED" in kv_dictionary:
-            braided_flag = parser.parse_flag(kv_dictionary, "BRAIDED")
-        else:
-            braided_flag = None
-        width = parser.parse_dimension(kv_dictionary["WIDTH"], "WIDTH")
-        height = parser.parse_dimension(kv_dictionary["HEIGHT"], "HEIGHT")
-        if "SEED" in kv_dictionary:
-            seed = parser.parse_dimension(kv_dictionary["SEED"], "SEED")
-        else:
-            seed = None
-        entry_point = parser.parse_point(kv_dictionary, "ENTRY")
-        exit_point = parser.parse_point(kv_dictionary, "EXIT")
-        return cls(output_filename, width, height, entry_point,
-                   exit_point, perfect_flag, braided_flag, seed)

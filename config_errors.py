@@ -1,3 +1,12 @@
+"""Exception hierarchy for A-Maze-ing configuration errors.
+
+Every error raised while parsing or validating a configuration
+derives from MazeConfigError, so callers can catch the base class.
+This module imports nothing from the project so that both
+config_parser and maze_config can depend on it freely.
+"""
+
+
 class MazeConfigError(Exception):
     """Base class for all configuration parsing and validation errors."""
 

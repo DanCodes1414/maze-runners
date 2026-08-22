@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from maze_config import MazeConfig
+from config_parser import parse_config_from_file
 from config_errors import MazeConfigError
 import sys
 
@@ -12,7 +12,7 @@ def main() -> int:
               file=sys.stderr)
         return 1
     try:
-        maze_config = MazeConfig.parse_config_from_file(sys.argv[1])
+        maze_config = parse_config_from_file(sys.argv[1])
     except (MazeConfigError, ValueError, OSError) as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1

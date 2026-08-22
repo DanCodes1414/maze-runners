@@ -1,6 +1,15 @@
-import config_errors
+"""Parse A-Maze-ing configuration files into MazeConfig instances.
+
+Reads a KEY=VALUE text file, converts each value to its expected
+type, and hands the result to MazeConfig for validation. The entry
+point is parse_config_from_file; the other functions are the steps
+it is built from.
+"""
+
+import config_errors as errors
 import sys
 import os
+from maze_config import MazeConfig
 
 MANDATORY_KEYS = ["WIDTH", "HEIGHT", "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"]
 
@@ -21,7 +30,7 @@ def remove_comments_and_whitespace(content: str) -> list[str]:
     return non_comment_or_whitespace_lines
 
 
-def parse_missing_keys(kv_dictionary: dict[str, str]) -> list[str]:
+def find_missing_keys(kv_dictionary: dict[str, str]) -> list[str]:
     """Return the mandatory keys that are absent from kv_dictionary."""
     missing_keys = []
     for mandatory_key in MANDATORY_KEYS:
@@ -48,11 +57,11 @@ def create_kv_dictionary(non_comment_lines: list[str]) -> dict[str, str]:
         kv_pair = line.split('=', 1)
         key = kv_pair[0].upper().strip()
         if len(kv_pair) < 2:
-            raise config_errors.LineSyntaxError(kv_pair[0])
+            raise errors.LineSyntaxError(kv_pair[0])
         if key in recognised_keys:
             value = kv_pair[1].strip()
             if not value:
-                raise config_errors.LineSyntaxError(line)
+                raise errors.LineSyntaxError(line)
             if key in kv_dictionary:
                 print(f"Duplicate key for {key} in configuration file: "
                       f"'{kv_pair[0]}'. Discarding duplicate "
@@ -89,7 +98,7 @@ def parse_point(kv_dictionary: dict[str, str],
     point_str = kv_dictionary[point_name]
     coords = point_str.split(',')
     if len(coords) != 2:
-        raise config_errors.TupleError(point_name)
+        raise errors.TupleError(point_name)
     x_coord = parse_dimension(coords[0], f"{point_name} x-coordinate")
     y_coord = parse_dimension(coords[1], f"{point_name} y-coordinate")
     return (x_coord, y_coord)
@@ -108,10 +117,10 @@ def parse_flag(kv_dictionary: dict[str, str], flag_name: str) -> bool:
         return True
     elif flag.capitalize() == "False":
         return False
-    raise config_errors.FlagError(flag, flag_name)
+    raise errors.FlagError(flag, flag_name)
 
 
-def parse_file(output_filename: str, config_filename: str) -> str:
+def check_output_filename(output_filename: str, config_filename: str) -> str:
     """Return output_filename if it is an acceptable output target.
 
     Raise OutputFilenameError if output_filename contains a path
@@ -120,9 +129,40 @@ def parse_file(output_filename: str, config_filename: str) -> str:
     output_filename_path = os.path.realpath(output_filename)
     config_filename_path = os.path.realpath(config_filename)
     if '/' in output_filename:
-        raise config_errors.OutputFilenameError("OUTPUT_FILE does "
-                                                "not accept paths.")
+        raise errors.OutputFilenameError("OUTPUT_FILE does "
+                                         "not accept paths.")
     if output_filename_path == config_filename_path:
-        raise config_errors.OutputFilenameError("OUTPUT_FILE can't be the"
-                                                " same as config filename.")
+        raise errors.OutputFilenameError("OUTPUT_FILE can't be the"
+                                         " same as config filename.")
     return output_filename
+
+
+def parse_config_from_file(config_filename: str) -> MazeConfig:
+    """    Read the file, strip comments, parse KEY=VALUE lines and pass
+    the typed values to MazeConfig, which validates them. This is the
+    intended way to create a MazeConfig from a file.
+    """
+    with open(config_filename) as f:
+        content = f.read()
+    non_comment_lines = remove_comments_and_whitespace(content)
+    kv_dictionary = create_kv_dictionary(non_comment_lines)
+    missing_keys = find_missing_keys(kv_dictionary)
+    if missing_keys:
+        raise errors.MissingKeyError(missing_keys)
+    output_filename = check_output_filename(kv_dictionary["OUTPUT_FILE"],
+                                            config_filename)
+    perfect = parse_flag(kv_dictionary, "PERFECT")
+    if "BRAIDED" in kv_dictionary:
+        braided = parse_flag(kv_dictionary, "BRAIDED")
+    else:
+        braided = None
+    width = parse_dimension(kv_dictionary["WIDTH"], "WIDTH")
+    height = parse_dimension(kv_dictionary["HEIGHT"], "HEIGHT")
+    if "SEED" in kv_dictionary:
+        seed = parse_dimension(kv_dictionary["SEED"], "SEED")
+    else:
+        seed = None
+    entry_point = parse_point(kv_dictionary, "ENTRY")
+    exit_point = parse_point(kv_dictionary, "EXIT")
+    return MazeConfig(output_filename, width, height, entry_point,
+                      exit_point, perfect, braided, seed)
