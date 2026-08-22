@@ -33,7 +33,7 @@ class AutomatonCell(BaseModel):
     row: int
     col: int
     state: CellState = Field(default=CellState.FREE)
-    walls: int = Field(default=15, ge=1, le=15)
+    walls: int = Field(default=15, ge=0, le=15)
     parent: str = Field(default="")
     free_neighbours: list[str] = Field(default_factory=list)
 
@@ -49,7 +49,7 @@ class Cell(BaseModel):
     """
     row: int
     col: int
-    walls: int = Field(default=15, ge=1, le=15)
+    walls: int = Field(default=15, ge=0, le=15)
 
     def is_blocked(self) -> bool:
         """Checks if the cell is blocked."""
