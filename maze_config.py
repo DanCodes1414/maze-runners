@@ -9,7 +9,7 @@ parameters is handled separately by config_parser.
 """
 
 import config_errors as errors
-
+from generator.py import get_blocked_cells
 
 class MazeConfig:
     """Validated maze parameters.
@@ -97,7 +97,8 @@ class MazeConfig:
     @staticmethod
     def validate_point(point_name: str, point_coords: tuple[int, int],
                        maze_dimensions: tuple[int, int]) -> tuple[int, int]:
-        """Return point_coords unchanged if they lie inside the maze.
+        """Return point_coords unchanged if they lie inside the maze
+        and aren't in the blocked cells.
 
         point_name is a label such as "ENTRY" or "EXIT", used only in
         error messages. maze_dimensions is the (width, height) pair the
@@ -106,6 +107,7 @@ class MazeConfig:
         Raise InvalidDimensionError if either coordinate is negative.
         Raise PointOutOfBoundsError if either coordinate is beyond the
         corresponding maze dimension.
+        Raise BlockedCellsError if either coordinate is in the blocked cells.
         """
         MazeConfig.validate_dimension(point_coords[0],
                                       f"{point_name} x-coordinate")
@@ -119,4 +121,7 @@ class MazeConfig:
             raise errors.PointOutOfBoundsError(point_coords, point_name,
                                                "y-coordinate",
                                                maze_dimensions[1] - 1)
+        blocked_cells = get_blocked_cells(maze_dimensions[1], maze_dimensions[0])
+        if point_coords in blocked_cells:
+            raise errors.BlockedCellsError(point_name)
         return point_coords

@@ -91,3 +91,9 @@ class ContradictionError(MazeConfigError):
     """
     def __init__(self) -> None:
         super().__init__("Maze cannot be both perfect and braided")
+
+class BlockedCellsError(MazeConfigError):
+    """Raise when ENTRY/EXIT point is in blocked (by 42 logo) cells."""
+    def __init__(self, point_name: str) -> None:
+        super().__init__(f"{point_name} point cannot be in blocked cells.")
+    

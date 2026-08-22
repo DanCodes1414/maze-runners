@@ -135,7 +135,24 @@ the docstrings of each exception class
 - **dqureshi**: <generator / display / packaging>.
 ### Planning and how it evolved
  
- 
+Personal note: dmgeorgi is new to python, or at least new to learning about it
+in a structured way. So, before tackling A-maze-ing, he completed and submitted py0-py4.
+The concepts he learned in those were classes, inheritance, exceptions and error handling and context
+managers, which he has used in his work. 
+
+However, he did not look into py5-py10 before or during the project.
+This was partly due to time constraints, and wanting to get through
+A-Maze-ing with his partner before either were black-holed. 
+However, it was also partly a conscious choice, since dmgeorgi has a tendency 
+to get stuck in tutorial hell; He wanted to make sure that he tackled real problems
+using the concepts he learned before learnng new concepts.
+
+He does not regret this choice but during the project he did a 
+lot of post-mortems with Claude and found that there were definitely ways he
+could've done lesss work had he known more. One example of this was learning about pydantic
+after reviewing dqureshi's work, and finding that it could've saved him a lot of time 
+when he was writing the validation section. Oh, well.
+
 ### What worked and what could be improved
  
  
