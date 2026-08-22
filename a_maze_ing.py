@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from maze_config import MazeConfig, MazeConfigError
+from maze_config import MazeConfig
+from config_errors import MazeConfigError
 import sys
 
 
