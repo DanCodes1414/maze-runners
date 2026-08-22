@@ -1,24 +1,24 @@
 *This project has been created as part of the 42 curriculum by dmgeorgi, dqureshi.*
-
+ 
 # A-Maze-ing
-
+ 
 ## Description
-
-
-
+ 
+ 
+ 
 ## Instructions
-
+ 
 `a_maze_ing.py` takes exactly one argument: the path to a configuration file.
 Any configuration error stops the program with a message on `stderr` and a
 non-zero exit code.
-
+ 
 ## Configuration file
-
+ 
 A default configuration is provided in `config.txt` at the root of the
 repository.
-
+ 
 ### Format
-
+ 
 - One `KEY=VALUE` pair per line, with exactly one `=` per line.
 - Lines whose first non-whitespace character is `#` are comments.
 - Blank lines are ignored.
@@ -27,9 +27,8 @@ repository.
 - Keys that are not listed below are silently ignored.
 - If a recognised key appears twice, the first value is kept and a warning is
   printed to `stderr`.
-
 ### Mandatory keys
-
+ 
 | Key           | Meaning                        | Value format                 | Example                |
 |---------------|--------------------------------|------------------------------|------------------------|
 | `WIDTH`       | Maze width in cells            | integer                      | `WIDTH=20`             |
@@ -38,16 +37,16 @@ repository.
 | `EXIT`        | Exit cell                      | `x,y`, zero-based            | `EXIT=19,14`           |
 | `OUTPUT_FILE` | Where the maze is written      | bare filename, no directory  | `OUTPUT_FILE=maze.txt` |
 | `PERFECT`     | Generate a perfect maze?       | `True` or `False`, any case  | `PERFECT=True`         |
-
+ 
 ### Optional keys
-
+ 
 | Key       | Meaning                                  | Value format                | Default when absent                |
 |-----------|------------------------------------------|-----------------------------|------------------------------------|
 | `SEED`    | Seed for reproducible generation         | non-negative integer        | a random seed is used              |
 | `BRAIDED` | Generate a board with no dead ends at all | `True` or `False`, any case | `False` (dead ends are tolerated)  |
-
+ 
 ### Validity rules
-
+ 
 - A perfect maze needs both dimensions to be at least 1 and an area of at
   least 2.
 - An imperfect maze needs both dimensions to be at least 2 and an area of at
@@ -59,9 +58,8 @@ repository.
   itself.
 - `PERFECT` and `BRAIDED` cannot both be `True`: a braided board contains loops
   by definition.
-
 ### Example
-
+ 
 ```ini
 # Default A-Maze-ing configuration
 WIDTH=20
@@ -72,73 +70,81 @@ OUTPUT_FILE=maze.txt
 PERFECT=False
 SEED=42
 ```
-
+ 
 ### Example errors
-
+ 
 | Line               | Message                                                              |
 |--------------------|----------------------------------------------------------------------|
 | `WIDTH=abc`        | `Error: ValueError on WIDTH. WIDTH value in configuration file: 'abc'` |
 | `EXIT=0,0` (same as entry) | `Error: Entry and exit points cannot be the same.`           |
 | `HEIGHT` missing   | `Error: The following mandatory keys are missing: ['HEIGHT']`        |
-
+ 
 ## Maze generation algorithm
-
-
+ 
+ 
 ### Why this algorithm
-
-
+ 
+ 
 ## Reusable code
-
-
-
+ 
+ 
+ 
 ## Parsing and validation (dmgeorgi)
-
-Configuration handling lives in `maze_config.py`, which is independent of the
-generator and the display.
-
-- `MazeConfig.parse_config_from_file(path)` reads, parses and validates a
-  configuration file and returns a `MazeConfig` instance. This is the entry
-  point used by `a_maze_ing.py`.
-- `MazeConfig(...)` can also be constructed directly with already-parsed values,
-  in which case only the validation step runs. All eight arguments are
-  positional and required: `output_filename, width, height, entry_coords,
-  exit_coords, perfect_flag, braided_flag, seed`. Pass `None` for
-  `braided_flag` or `seed` to leave them unset.
-
+ 
+Configuration handling is split across three modules so that the validation
+logic can be packaged without the file-parsing code:
+ 
+| Module             | Responsibility                                                    |
+|--------------------|-------------------------------------------------------------------|
+| `config_errors.py` | The `MazeConfigError` exception hierarchy. Imports nothing from the project. |
+| `maze_config.py`   | The `MazeConfig` class: takes raw values and validates them.       |
+| `config_parser.py` | Reads a configuration file, converts each value to its type, and builds a `MazeConfig`. |
+ 
+Dependencies point one way only: `config_parser` → `maze_config` →
+`config_errors`. Only the last two are needed by a project that already has
+its parameters and wants them checked.
+ 
+- `config_parser.parse_config_from_file(path)` reads and parses a configuration
+  file and returns a validated `MazeConfig`. This is the entry point used by
+  `a_maze_ing.py`.
+- `MazeConfig(...)` can also be constructed directly from already-typed values,
+  in which case only validation runs. The arguments, in order, are
+  `output_filename, width, height, entry_coords, exit_coords, perfect_flag,
+  braided_flag, seed`; the last two are optional and default to `None`.
 ```python
-from maze_config import MazeConfig, MazeConfigError
-
+from config_errors import MazeConfigError
+from config_parser import parse_config_from_file
+ 
 try:
-    maze_config = MazeConfig.parse_config_from_file("config.txt")
+    maze_config = parse_config_from_file("config.txt")
 except (MazeConfigError, ValueError, OSError) as e:
     print(f"Error: {e}")
 ```
-
-Every validation failure is a subclass of `MazeConfigError`, so callers can
-catch one base class. The specific conditions are documented in the docstrings
-of each exception class (`python3 -c "import maze_config; help(maze_config)"`).
-
+ 
+Every parsing or validation failure is a subclass of `MazeConfigError`, so
+callers can catch one base class. The specific conditions are documented in
+the docstrings of each exception class
+(`python3 -c "import config_errors; help(config_errors)"`).
+ 
 ## Team and project management
-
+ 
 ### Roles
-
-- **dmgeorgi**: configuration parsing and validation (`maze_config.py`).
-- **<login2>**: <generator / display / packaging>.
-
+ 
+- **dmgeorgi**: configuration parsing and validation (`maze_config.py`,
+  `config_parser.py`, `config_errors.py`).
+- **dqureshi**: <generator / display / packaging>.
 ### Planning and how it evolved
-
-
+ 
+ 
 ### What worked and what could be improved
-
-
+ 
+ 
 ### Tools
-
-
+ 
+ 
 ## Resources
-
+ 
 - PEP 8, PEP 257, PEP 484 (style, docstrings, type hints).
 - Python documentation for `random`, `argparse`, and packaging
   (`https://packaging.python.org`).
-
 ### How AI was used
-
