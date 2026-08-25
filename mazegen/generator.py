@@ -128,15 +128,8 @@ def initialise_grid(config:MazeConfig) -> list[list['AutomatonCell']]:
     """
     Initialises a grid of AutomatonCells with the specified dimensions.
     """
-    # TODO: Leave validation to MazeConfig class
-    if (config.width < 2 or config.height < 2) and not config.perfect:
-        raise MazeConfigError("Maze dimensions must be at least 2x2 for non-perfect mazes.")
-    if config.width < 2 and config.height < 2 and config.perfect:
-        raise MazeConfigError("Maze dimensions must be at least 1x2 or 2x1 for perfect mazes.")
     grid = [[AutomatonCell(row=r, col=c) for c in range(config.width)] for r in range(config.height)]
     blocked_cells = get_blocked_cells(config.height, config.width)
-    if config.entry in blocked_cells or config.exit in blocked_cells:
-        raise MazeConfigError("Entry and exit cells cannot be in blocked cells.")
     for r in range(config.height):
         for c in range(config.width):
             if (r, c) in blocked_cells:
