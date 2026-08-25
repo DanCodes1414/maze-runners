@@ -11,7 +11,7 @@ class MazeConfig(BaseModel):
         entry (tuple[int, int]): The coordinates of the maze entry point (row, col).
         exit (tuple[int, int]): The coordinates of the maze exit point (row, col).
         seed (int): An optional seed for random number generation. If not provided, a random seed will be used.
-        perfect (bool): If True, generates a perfect maze (no loops). This set to True will override the braid option.
+        perfect (bool): If True, generates a perfect maze (no loops).
         braid (bool): If True, generates a braided maze (a maze with loops and no dead ends).
         output_file (str): The name of the output file where the maze will be exported.
     """
