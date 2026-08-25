@@ -124,4 +124,4 @@ class MazeConfig:
         blocked_cells = get_blocked_cells(maze_dimensions[1], maze_dimensions[0])
         if point_coords in blocked_cells:
             raise errors.BlockedCellsError(point_name)
-        return point_coords
+        return (point_coords[1], point_coords[0])
