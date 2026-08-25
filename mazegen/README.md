@@ -44,7 +44,7 @@ The `MazeConfig` class contains the configuration required to generate a maze.
 - entry: The coordinates of the maze entry point (row, col).
 - exit: The coordinates of the maze exit point (row, col).
 - seed: An optional seed for random number generation for maze reproducibility. If not provided, a random seed will be used.
-- perfect: If True, generates a perfect maze (no loops). This set to True will override the braid option.
+- perfect: If True, generates a perfect maze (no loops).
 - braid: If True, generates a braided maze (a maze with loops and no dead ends).
 - output_file: The name of the output file where the maze will be exported.
 
