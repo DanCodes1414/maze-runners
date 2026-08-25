@@ -300,7 +300,7 @@ class MazeGenerator:
         self.grid = algorithm_step(self.grid, rand)
         if not self.config.perfect:
             self.grid = imperfect_maze(self.grid, rand)
-        if not self.config.perfect and self.config.braid:
+        if self.config.braid:
             self.grid = perfectly_braided_maze(self.grid, rand)
         simple_grid = create_simple_grid(self.grid)
         return simple_grid
