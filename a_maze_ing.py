@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from config_parser import parse_config_from_file
-from config_errors import MazeConfigError
+from mazegen.errors import MazeConfigError
 import sys
 
 
