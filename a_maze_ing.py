@@ -2,6 +2,7 @@
 
 from config_parser import parse_config_from_file
 from config_errors import MazeConfigError
+from mazegen.maze import Maze
 import sys
 
 
@@ -16,15 +17,14 @@ def main() -> int:
     except (MazeConfigError, ValueError, OSError) as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
-    else:
-        print(maze_config.width)
-        print(maze_config.height)
-        print(maze_config.entry_point)
-        print(maze_config.exit_point)
-        print(maze_config.output_filename)
-        print(maze_config.perfect_flag)
-        print(maze_config.braided_flag)
-        print(maze_config.seed)
+    except Exception as e:
+        print(f"Unexpected Error in Parsing and Validation: {e}", file=sys.stderr)
+        return 1
+    maze = Maze(config=maze_config)
+    maze.generate()
+    maze.solve()
+    maze.render()
+    maze.export()
     return 0
 
 
