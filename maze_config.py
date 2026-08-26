@@ -121,6 +121,7 @@ class MazeConfig:
             raise errors.PointOutOfBoundsError(point_coords, point_name,
                                                "y-coordinate",
                                                maze_dimensions[1] - 1)
+        point_coords = (point_coords[1], point_coords[0])
         blocked_cells = get_blocked_cells(maze_dimensions[1], maze_dimensions[0])
         if point_coords in blocked_cells:
             raise errors.BlockedCellsError(point_name)
