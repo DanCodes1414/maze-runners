@@ -123,14 +123,11 @@ def parse_flag(kv_dictionary: dict[str, str], flag_name: str) -> bool:
 def check_output_filename(output_filename: str, config_filename: str) -> str:
     """Return output_filename if it is an acceptable output target.
 
-    Raise OutputFilenameError if output_filename contains a path
-    separator or resolves to the same file as config_filename.
+    Raise OutputFilenameError if output_filename 
+    resolves to the same file as config_filename.
     """
     output_filename_path = os.path.realpath(output_filename)
     config_filename_path = os.path.realpath(config_filename)
-    if '/' in output_filename:
-        raise errors.OutputFilenameError("OUTPUT_FILE does "
-                                         "not accept paths.")
     if output_filename_path == config_filename_path:
         raise errors.OutputFilenameError("OUTPUT_FILE can't be the"
                                          " same as config filename.")

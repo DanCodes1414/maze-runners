@@ -54,3 +54,6 @@ class BlockedCellsError(MazeConfigError):
     """Raise when ENTRY/EXIT point is in blocked (by 42 logo) cells."""
     def __init__(self, point_name: str) -> None:
         super().__init__(f"{point_name} point cannot be in blocked cells.")
+
+class OutputFilenameError(MazeConfigError):
+    """Raise when the value assigned to OUTPUT_FILE is not acceptable."""

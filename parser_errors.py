@@ -43,6 +43,5 @@ class TupleError(MazeParserError):
         super().__init__("Wrong number of coordinates"
                          f" provided for {point_name}")
 
-
 class OutputFilenameError(MazeParserError):
     """Raise when the value assigned to OUTPUT_FILE is not acceptable."""
