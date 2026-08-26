@@ -1,7 +1,7 @@
 import random
 from pydantic import BaseModel, Field
 from .cell import Cell
-from .generator import MazeGenerator, MazeConfigError
+from .generator import MazeGenerator
 from .solver import MazeSolver
 from .colours import ColourPair, COLOUR_PAIRS
 from .config import MazeConfig
@@ -29,14 +29,10 @@ class Maze(BaseModel):
         """
         Generates the maze using a maze generation algorithm and updates the grid attribute.
         """
-        # TODO: Add config validation here to ensure the config is valid before generating the maze.
-
         try:
             generator = MazeGenerator(self.config)
             self.grid = generator.generate()
             self.generated = True
-        except MazeConfigError as ce:
-            print(f"Configuration error: {ce}")
         except Exception as e:
             print(f"Unexpected error: {e}")
 
@@ -87,7 +83,7 @@ class Maze(BaseModel):
 
         if not len(self.path):
             self.solve()
-        directions = {
+        direction_vectors = {
             "N": (-1, 0),
             "S": (1, 0),
             "E": (0, 1),
@@ -100,7 +96,7 @@ class Maze(BaseModel):
             dr = next_r - current_r
             dc = next_c - current_c
             direction = None
-            for dir_key, (dir_r, dir_c) in directions.items():
+            for dir_key, (dir_r, dir_c) in direction_vectors.items():
                 if (dr, dc) == (dir_r, dir_c):
                     direction = dir_key
                     break

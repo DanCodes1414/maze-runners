@@ -5,17 +5,12 @@ from .cell import Cell, AutomatonCell, CellState
 
 TURN_PROB = 12
 BRANCH_PROB = 5
-directions = {
+direction_vectors = {
     "N": (-1, 0),
     "S": (1, 0),
     "E": (0, 1),
     "W": (0, -1)
 }
-
-
-class MazeConfigError(Exception):
-    """Custom exception for invalid maze configurations."""
-    pass
 
 
 def wall_direction(direction: str) -> int:
@@ -115,7 +110,7 @@ def update_free_neighbours(cell: 'AutomatonCell', grid: list[list['AutomatonCell
     cell.free_neighbours = []
     if cell.state == CellState.BLOCKED:
         return
-    for direction, (drv, drc) in directions.items():
+    for direction, (drv, drc) in direction_vectors.items():
         neighbour_row = cell.row + drv
         neighbour_col = cell.col + drc
         if 0 <= neighbour_row < len(grid) and 0 <= neighbour_col < len(grid[0]):
@@ -174,7 +169,7 @@ def algorithm_step(grid: list[list['AutomatonCell']], rand: Random) -> list[list
             if direction is None:
                 seed_cell.state = CellState.CONNECTED
                 continue
-            drv, dcv = directions[direction]
+            drv, dcv = direction_vectors[direction]
             neighbour_cell = grid[seed_cell.row + drv][seed_cell.col + dcv]
             neighbour_cell.state = CellState.INVITE
             neighbour_cell.parent = reverse_direction(direction)
@@ -187,7 +182,8 @@ def algorithm_step(grid: list[list['AutomatonCell']], rand: Random) -> list[list
     cells = [cell for row in grid for cell in row if (cell.state != CellState.BLOCKED and cell.parent)]
     for cell in cells:
         cell.walls -= wall_direction(cell.parent)
-        parent_cell = grid[cell.row + directions[cell.parent][0]][cell.col + directions[cell.parent][1]]
+        direction_vector = direction_vectors[cell.parent]
+        parent_cell = grid[cell.row + direction_vector[0]][cell.col + direction_vector[1]]
         parent_cell.walls -= wall_direction(reverse_direction(cell.parent))
     return grid
 
