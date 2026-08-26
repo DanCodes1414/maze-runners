@@ -106,8 +106,8 @@ class Maze(BaseModel):
             with open(self.config.output_file, 'w') as f:
                 for line in grid_lines:
                     f.write(line + "\n")
-                f.write(f"\n{self.config.entry[0]},{self.config.entry[1]}\n")
-                f.write(f"{self.config.exit[0]},{self.config.exit[1]}\n")
+                f.write(f"\n{self.config.entry[1]},{self.config.entry[0]}\n")
+                f.write(f"{self.config.exit[1]},{self.config.exit[0]}\n")
                 f.write(f"{shortest_path}\n")
         except Exception as e:
             print(f"Error exporting maze to file: {e}")
