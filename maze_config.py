@@ -9,7 +9,7 @@ parameters is handled separately by config_parser.
 """
 
 import config_errors as errors
-from generator.py import get_blocked_cells
+from mazegen.generator import get_blocked_cells
 
 class MazeConfig:
     """Validated maze parameters.
