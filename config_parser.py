@@ -6,10 +6,10 @@ point is parse_config_from_file; the other functions are the steps
 it is built from.
 """
 
-import config_errors as errors
+import parser_errors as errors
 import sys
 import os
-from maze_config import MazeConfig
+from mazegen.config import MazeConfig
 
 MANDATORY_KEYS = ["WIDTH", "HEIGHT", "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"]
 
@@ -155,7 +155,7 @@ def parse_config_from_file(config_filename: str) -> MazeConfig:
     if "BRAIDED" in kv_dictionary:
         braided = parse_flag(kv_dictionary, "BRAIDED")
     else:
-        braided = None
+        braided = False
     width = parse_dimension(kv_dictionary["WIDTH"], "WIDTH")
     height = parse_dimension(kv_dictionary["HEIGHT"], "HEIGHT")
     if "SEED" in kv_dictionary:
@@ -164,5 +164,13 @@ def parse_config_from_file(config_filename: str) -> MazeConfig:
         seed = None
     entry_point = parse_point(kv_dictionary, "ENTRY")
     exit_point = parse_point(kv_dictionary, "EXIT")
-    return MazeConfig(output_filename, width, height, entry_point,
-                      exit_point, perfect, braided, seed)
+    return MazeConfig(
+        width=width,
+        height=height,
+        entry=entry_point,
+        exit=exit_point,
+        perfect=perfect,
+        braid=braided,
+        seed=seed,
+        output_file=output_filename
+    )

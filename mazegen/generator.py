@@ -1,6 +1,6 @@
 from random import Random
 from .config import MazeConfig
-from .cell import Cell, AutomatonCell, CellState
+from .cell import Cell, AutomatonCell, CellState, get_blocked_cells
 
 
 TURN_PROB = 12
@@ -19,41 +19,6 @@ def wall_direction(direction: str) -> int:
     elif direction == "E": return 2
     elif direction == "S": return 4
     else: return 8
-
-
-def get_blocked_cells(rows: int, cols: int) -> set[tuple[int, int]]:
-    """
-    Returns a set of coordinates for cells that should be blocked in the maze.
-    The blocked cells are determined based on the maze dimensions
-    and are designed to create a 42 pattern at the centre of the maze.\n
-    If the maze dimensions are too small for the 42 pattern, no cells will be blocked.
-    """
-    if rows < 6 or cols < 8:
-        return set()
-
-    middle_row = (rows - 1) // 2
-    middle_col = (cols - 1) // 2
-    blocked_cells = {
-        (middle_row - 2, middle_col - 3),
-        (middle_row - 2, middle_col + 1),
-        (middle_row - 2, middle_col + 2),
-        (middle_row - 2, middle_col + 3),
-        (middle_row - 1, middle_col - 3),
-        (middle_row - 1, middle_col + 3),
-        (middle_row, middle_col - 3),
-        (middle_row, middle_col - 2),
-        (middle_row, middle_col - 1),
-        (middle_row, middle_col + 1),
-        (middle_row, middle_col + 2),
-        (middle_row, middle_col + 3),
-        (middle_row + 1, middle_col - 1),
-        (middle_row + 1, middle_col + 1),
-        (middle_row + 2, middle_col - 1),
-        (middle_row + 2, middle_col + 1),
-        (middle_row + 2, middle_col + 2),
-        (middle_row + 2, middle_col + 3),
-    }
-    return blocked_cells
 
 
 def branching(cell: 'AutomatonCell', rand: Random) -> None:
