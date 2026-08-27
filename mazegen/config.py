@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, model_validator
 from typing import Self
 from .errors import (
-    PointError, ContradictionError, InvalidDimensionError, MazeTooSmallError, PointOutOfBoundsError, BlockedCellsError
+    OutputFilenameError, PointError, ContradictionError, InvalidDimensionError, MazeTooSmallError, PointOutOfBoundsError, BlockedCellsError
 )
 from .cell import get_blocked_cells
 
@@ -38,9 +38,12 @@ class MazeConfig(BaseModel):
         validate_point, and seed (when not None) with validate_dimension;
         any error those raise is propagated.
 
+        Raise OutputFilenameError if output filename contains paths.
         Raise PointError if entry and exit coords are equal.
         Raise ContradictionError if perfect and braid flags are both True.
         """
+        if '/' in self.output_file:
+            raise OutputFilenameError("OUTPUT_FILE does not accept paths.")
         self.width, self.height = MazeConfig.validate_maze(self.width, self.height, self.perfect)
         maze_dimensions = (self.width, self.height)
         self.entry = MazeConfig.validate_point("ENTRY", self.entry, maze_dimensions)
