@@ -41,8 +41,8 @@ The `Cell` class contains the position and walls for each individual cell in the
 The `MazeConfig` class contains the configuration required to generate a maze.
 - width: The width of the maze.
 - height: The height of the maze.
-- entry: The coordinates of the maze entry point (row, col).
-- exit: The coordinates of the maze exit point (row, col).
+- entry: The coordinates of the maze entry point (x, y).
+- exit: The coordinates of the maze exit point (x, y).
 - seed: An optional seed for random number generation for maze reproducibility. If not provided, a random seed will be used.
 - perfect: If True, generates a perfect maze (no loops).
 - braid: If True, generates a braided maze (a maze with loops and no dead ends).
