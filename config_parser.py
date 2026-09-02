@@ -1,9 +1,14 @@
 """Parse A-Maze-ing configuration files into MazeConfig instances.
 
-Reads a KEY=VALUE text file, converts each value to its expected
-type, and hands the result to MazeConfig for validation. The entry
-point is parse_config_from_file; the other functions are the steps
-it is built from.
+Reads a KEY=VALUE text file, converts each value to its expected type,
+and hands the result to MazeConfig, which validates it.
+
+Every key in MANDATORY_KEYS must be present. The keys in
+ADDITIONAL_KEYS are optional and fall back to a default. Any other key
+found in the file is ignored.
+
+The entry point is MazeParsing.parse_config_from_file; the other methods
+are the steps it is built from.
 """
 
 import parser_errors as errors
@@ -16,158 +21,286 @@ MANDATORY_KEYS = ["WIDTH", "HEIGHT", "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"]
 ADDITIONAL_KEYS = ["SEED", "BRAIDED"]
 
 
-def remove_comments_and_whitespace(content: str) -> list[str]:
-    """Return the stripped, non-empty, non-comment lines of content.
+class MazeParsing:
+    """Namespace holding the parsing steps for a configuration file.
 
-    A line is a comment if its first non-whitespace character is '#'.
+    The class keeps no state and is never instantiated: every method is
+    a staticmethod or a classmethod. Call parse_config_from_file to go
+    from a filename to a validated MazeConfig; the other methods are
+    exposed mainly so each step can be read and tested on its own.
     """
-    lines = content.split('\n')
-    non_comment_or_whitespace_lines: list[str] = []
-    for line in lines:
-        line = line.strip()
-        if line and line[0] != '#':
-            non_comment_or_whitespace_lines.append(line)
-    return non_comment_or_whitespace_lines
 
+    @staticmethod
+    def remove_comments_and_whitespace(content: str) -> list[str]:
+        """Return the usable lines of a configuration file.
 
-def find_missing_keys(kv_dictionary: dict[str, str]) -> list[str]:
-    """Return the mandatory keys that are absent from kv_dictionary."""
-    missing_keys = []
-    for mandatory_key in MANDATORY_KEYS:
-        if mandatory_key not in kv_dictionary.keys():
-            missing_keys.append(mandatory_key)
-    return missing_keys
+        Each line is stripped of its surrounding whitespace, then blank
+        lines and comment lines are dropped. A line is a comment when
+        its first non-whitespace character is '#', so a '#' further
+        along a line is kept and ends up inside the value.
 
+        Args:
+            content: The whole configuration file, as a single string.
 
-def create_kv_dictionary(non_comment_lines: list[str]) -> dict[str, str]:
-    """Return a dict of recognised keys to their values.
+        Returns:
+            non_comment_or_whitespace_lines: The stripped lines that are neither empty nor comments, in \
+            the order they appear in the file.
+        """
+        lines = content.split('\n')
+        non_comment_or_whitespace_lines: list[str] = []
+        for line in lines:
+            line = line.strip()
+            if line and line[0] != '#':
+                non_comment_or_whitespace_lines.append(line)
+        return non_comment_or_whitespace_lines
 
-    non_comment_lines is the output of remove_comments_and_whitespace.
-    Keys are matched case-insensitively and stored in upper case;
-    lines with unrecognised keys are ignored. If a recognised key
-    appears more than once, the first value is kept and a warning is
-    printed to stderr.
+    @staticmethod
+    def find_missing_keys(kv_dictionary: dict[str, str]) -> list[str]:
+        """Return the mandatory keys missing from a parsed config.
 
-    Raise LineSyntaxError if a line has no '=' or a recognised key
-    has an empty value.
-    """
-    kv_dictionary: dict[str, str] = {}
-    recognised_keys = MANDATORY_KEYS + ADDITIONAL_KEYS
-    for line in non_comment_lines:
-        kv_pair = line.split('=', 1)
-        key = kv_pair[0].upper().strip()
-        if len(kv_pair) < 2:
-            raise errors.LineSyntaxError(kv_pair[0])
-        if key in recognised_keys:
-            value = kv_pair[1].strip()
-            if not value:
-                raise errors.LineSyntaxError(line)
-            if key in kv_dictionary:
-                print(f"Duplicate key for {key} in configuration file: "
-                      f"'{kv_pair[0]}'. Discarding duplicate "
-                      "and continuing.", file=sys.stderr)
-            else:
-                kv_dictionary[key] = value
-    return kv_dictionary
+        Args:
+            kv_dictionary: The keys found in the file, as returned by
+                create_kv_dictionary.
 
+        Returns:
+            missing_keys: The keys of MANDATORY_KEYS that are absent from \
+            kv_dictionary, in the order they are declared there. Empty \
+            if none are missing.
+        """
+        missing_keys = []
+        for mandatory_key in MANDATORY_KEYS:
+            if mandatory_key not in kv_dictionary.keys():
+                missing_keys.append(mandatory_key)
+        return missing_keys
 
-def parse_dimension(dimension_str: str, dimension_name: str) -> int:
-    """Return dimension_str converted to an int.
+    @staticmethod
+    def create_kv_dictionary(non_comment_lines: list[str]) -> dict[str, str]:
+        """Map the recognised keys of a config file to their values.
 
-    dimension_name is used only in the error message.
+        Each line is split on its first '='. The key is upper-cased and
+        stripped, so keys match case-insensitively and may be padded
+        with spaces; the value is stripped too. Lines whose key is in
+        neither MANDATORY_KEYS nor ADDITIONAL_KEYS are skipped without
+        error. When a recognised key appears more than once, the first
+        value is kept and a warning is printed on stderr.
 
-    Raise ValueError if dimension_str is not a valid integer.
-    """
-    try:
-        dimension_int = int(dimension_str)
-    except ValueError:
-        raise ValueError(f"ValueError on {dimension_name}. {dimension_name} "
-                         f"value in configuration file: '{dimension_str}'")
-    return dimension_int
+        Args:
+            non_comment_lines: Stripped lines, as returned by
+                remove_comments_and_whitespace.
 
+        Returns:
+            kv_dictionary: The recognised keys, upper-cased, mapped to their raw string \
+            values. Converting those values to their expected types is \
+            left to the other methods.
 
-def parse_point(kv_dictionary: dict[str, str],
-                point_name: str) -> tuple[int, int]:
-    """Return the (x, y) pair stored under point_name in kv_dictionary.
+        Raises:
+            errors.LineSyntaxError: If a line holds no '=' at all, or if
+                a recognised key is given an empty value.
+        """
+        kv_dictionary: dict[str, str] = {}
+        recognised_keys = MANDATORY_KEYS + ADDITIONAL_KEYS
+        for line in non_comment_lines:
+            kv_pair = line.split('=', 1)
+            key = kv_pair[0].upper().strip()
+            if len(kv_pair) < 2:
+                raise errors.LineSyntaxError(kv_pair[0])
+            if key in recognised_keys:
+                value = kv_pair[1].strip()
+                if not value:
+                    raise errors.LineSyntaxError(line)
+                if key in kv_dictionary:
+                    print(f"Duplicate key for {key} in configuration file: '{kv_pair[0]}'. "
+                          "Discarding duplicate and continuing.", file=sys.stderr)
+                else:
+                    kv_dictionary[key] = value
+        return kv_dictionary
 
-    The value must be two comma-separated integers.
+    @staticmethod
+    def parse_dimension(dimension_str: str, dimension_name: str) -> int:
+        """Convert a configuration value to an int.
 
-    Raise TupleError if there are not exactly two coordinates.
-    Raise ValueError if either coordinate is not an integer.
-    """
-    point_str = kv_dictionary[point_name]
-    coords = point_str.split(',')
-    if len(coords) != 2:
-        raise errors.TupleError(point_name)
-    x_coord = parse_dimension(coords[0], f"{point_name} x-coordinate")
-    y_coord = parse_dimension(coords[1], f"{point_name} y-coordinate")
-    return (x_coord, y_coord)
+        Args:
+            dimension_str: The value to convert. Surrounding whitespace
+                and a leading sign are accepted, as by int().
+            dimension_name: The name used to identify the value in the
+                error message. It has no effect on the conversion.
 
+        Returns:
+            dimension_str: dimension as an int. Nothing else is checked here. Negative \
+            or unreasonably large values are rejected later by \
+            MazeConfig.
 
-def parse_flag(kv_dictionary: dict[str, str], flag_name: str) -> bool:
-    """Return the boolean stored under flag_name in kv_dictionary.
+        Raises:
+            ValueError: If dimension_str is not a valid integer. The
+                message names dimension_name and quotes the value.
+        """
+        try:
+            dimension_int = int(dimension_str)
+        except ValueError:
+            raise ValueError(f"ValueError on {dimension_name}. {dimension_name} "
+                             f"value in configuration file: '{dimension_str}'")
+        return dimension_int
 
-    The value is matched case-insensitively against "True" and
-    "False".
+    @classmethod
+    def parse_point(cls, kv_dictionary: dict[str, str],
+                    point_name: str) -> tuple[int, int]:
+        """Read a pair of coordinates from a parsed configuration.
 
-    Raise FlagError if the value is neither.
-    """
-    flag = kv_dictionary[flag_name]
-    if flag.capitalize() == "True":
-        return True
-    elif flag.capitalize() == "False":
-        return False
-    raise errors.FlagError(flag, flag_name)
+        The value is split on ',' and both halves go through
+        parse_dimension, so "0,0" and " 0 , 0 " are equally accepted.
+        Whether the point falls inside the maze is checked later by
+        MazeConfig.
 
+        Args:
+            kv_dictionary: The parsed configuration.
+            point_name: The key to read, e.g. "ENTRY" or "EXIT". It is
+                also used in the error messages, and must be present in
+                kv_dictionary.
 
-def check_output_filename(output_filename: str, config_filename: str) -> str:
-    """Return output_filename if it is an acceptable output target.
+        Returns:
+            x_coord, y_coord: The coordinates as an (x, y) tuple of ints.
 
-    Raise OutputFilenameError if output_filename 
-    resolves to the same file as config_filename.
-    """
-    output_filename_path = os.path.realpath(output_filename)
-    config_filename_path = os.path.realpath(config_filename)
-    if output_filename_path == config_filename_path:
-        raise errors.OutputFilenameError("OUTPUT_FILE can't be the"
-                                         " same as config filename.")
-    return output_filename
+        Raises:
+            errors.TupleError: If the value does not hold exactly two
+                comma-separated fields.
+            ValueError: If either coordinate is not a valid integer.
+            KeyError: If point_name is absent from kv_dictionary.
+        """
+        point_str = kv_dictionary[point_name]
+        coords = point_str.split(',')
+        if len(coords) != 2:
+            raise errors.TupleError(point_name)
+        x_coord = cls.parse_dimension(coords[0], f"{point_name} x-coordinate")
+        y_coord = cls.parse_dimension(coords[1], f"{point_name} y-coordinate")
+        return (x_coord, y_coord)
 
+    @staticmethod
+    def parse_flag(kv_dictionary: dict[str, str], flag_name: str) -> bool:
+        """Read a boolean flag from a parsed configuration.
 
-def parse_config_from_file(config_filename: str) -> MazeConfig:
-    """    Read the file, strip comments, parse KEY=VALUE lines and pass
-    the typed values to MazeConfig, which validates them. This is the
-    intended way to create a MazeConfig from a file.
-    """
-    with open(config_filename) as f:
-        content = f.read()
-    non_comment_lines = remove_comments_and_whitespace(content)
-    kv_dictionary = create_kv_dictionary(non_comment_lines)
-    missing_keys = find_missing_keys(kv_dictionary)
-    if missing_keys:
-        raise errors.MissingKeyError(missing_keys)
-    output_filename = check_output_filename(kv_dictionary["OUTPUT_FILE"],
-                                            config_filename)
-    perfect = parse_flag(kv_dictionary, "PERFECT")
-    if "BRAIDED" in kv_dictionary:
-        braided = parse_flag(kv_dictionary, "BRAIDED")
-    else:
-        braided = False
-    width = parse_dimension(kv_dictionary["WIDTH"], "WIDTH")
-    height = parse_dimension(kv_dictionary["HEIGHT"], "HEIGHT")
-    if "SEED" in kv_dictionary:
-        seed = parse_dimension(kv_dictionary["SEED"], "SEED")
-    else:
-        seed = None
-    entry_point = parse_point(kv_dictionary, "ENTRY")
-    exit_point = parse_point(kv_dictionary, "EXIT")
-    return MazeConfig(
-        width=width,
-        height=height,
-        entry=entry_point,
-        exit=exit_point,
-        perfect=perfect,
-        braid=braided,
-        seed=seed,
-        output_file=output_filename
-    )
+        The value is compared using str.capitalize, which upper-cases
+        the first character and lower-cases the rest, so "TRUE", "true"
+        and "tRuE" are all accepted.
+
+        Args:
+            kv_dictionary: The parsed configuration.
+            flag_name: The key to read, e.g. "PERFECT" or "BRAIDED". It
+                is also used in the error message, and must be present
+                in kv_dictionary.
+
+        Returns:
+            The boolean the value stands for.
+
+        Raises:
+            errors.FlagError: If the value is neither "True" nor
+                "False", ignoring case.
+            KeyError: If flag_name is absent from kv_dictionary.
+        """
+        flag = kv_dictionary[flag_name]
+        if flag.capitalize() == "True":
+            return True
+        elif flag.capitalize() == "False":
+            return False
+        raise errors.FlagError(flag, flag_name)
+
+    @staticmethod
+    def check_output_filename(output_filename: str, config_filename: str) -> str:
+        """Check that the output will not overwrite the config file.
+
+        Both names are resolved with os.path.realpath, so symbolic links
+        and different relative paths leading to the same file are
+        caught. Nothing else is verified: the target directory may not
+        exist and the file may not be writable.
+
+        Args:
+            output_filename: The value of OUTPUT_FILE.
+            config_filename: The path the configuration was read from.
+
+        Returns:
+            output_filename: unchanged, so the check can be used inline.
+
+        Raises:
+            errors.OutputFilenameError: If both names resolve to the
+                same path.
+        """
+        output_filename_path = os.path.realpath(output_filename)
+        config_filename_path = os.path.realpath(config_filename)
+        if output_filename_path == config_filename_path:
+            raise errors.OutputFilenameError("OUTPUT_FILE can't be the same as config filename.")
+        return output_filename
+
+    @classmethod
+    def parse_config_from_file(cls, config_filename: str) -> MazeConfig:
+        """Build a MazeConfig from a configuration file.
+
+        Reads the file, strips comments, collects the KEY=VALUE pairs,
+        converts each value to its expected type and passes them to
+        MazeConfig, which validates them. This is the intended way to
+        create a MazeConfig from a file.
+
+        The optional keys fall back to a default when absent: BRAIDED to
+        False and SEED to None. BRAIDED is passed to MazeConfig as its
+        braid argument.
+
+        Values are converted in a fixed order (OUTPUT_FILE, PERFECT,
+        BRAIDED, WIDTH, HEIGHT, SEED, ENTRY, EXIT) and the first failure
+        stops the parsing, so a file with several problems only reports
+        the first one in that order.
+
+        Args:
+            config_filename: Path to the configuration file.
+
+        Returns:
+            A MazeConfig built from the file and validated by MazeConfig
+            itself. Values that are individually well-formed but
+            describe an impossible maze are rejected there, not here.
+
+        Raises:
+            OSError: If the file cannot be opened or read, for instance
+                FileNotFoundError or PermissionError.
+            UnicodeDecodeError: If the file is not text in the default
+                encoding.
+            errors.MissingKeyError: If any key of MANDATORY_KEYS is
+                absent from the file.
+            errors.LineSyntaxError: On a line without '=' or with an
+                empty value for a recognised key.
+            errors.OutputFilenameError: If OUTPUT_FILE points at the
+                configuration file itself.
+            errors.FlagError: On a PERFECT or BRAIDED value that is not
+                a boolean.
+            errors.TupleError: If ENTRY or EXIT does not hold exactly
+                two coordinates.
+            ValueError: If WIDTH, HEIGHT, SEED or a coordinate is not a
+                valid integer.
+        """
+        with open(config_filename) as f:
+            content = f.read()
+        non_comment_lines = cls.remove_comments_and_whitespace(content)
+        kv_dictionary = cls.create_kv_dictionary(non_comment_lines)
+        missing_keys = cls.find_missing_keys(kv_dictionary)
+        if missing_keys:
+            raise errors.MissingKeyError(missing_keys)
+        output_filename = cls.check_output_filename(kv_dictionary["OUTPUT_FILE"], config_filename)
+        perfect = cls.parse_flag(kv_dictionary, "PERFECT")
+        if "BRAIDED" in kv_dictionary:
+            braided = cls.parse_flag(kv_dictionary, "BRAIDED")
+        else:
+            braided = False
+        width = cls.parse_dimension(kv_dictionary["WIDTH"], "WIDTH")
+        height = cls.parse_dimension(kv_dictionary["HEIGHT"], "HEIGHT")
+        if "SEED" in kv_dictionary:
+            seed = cls.parse_dimension(kv_dictionary["SEED"], "SEED")
+        else:
+            seed = None
+        entry_point = cls.parse_point(kv_dictionary, "ENTRY")
+        exit_point = cls.parse_point(kv_dictionary, "EXIT")
+        return MazeConfig(
+            width=width,
+            height=height,
+            entry=entry_point,
+            exit=exit_point,
+            perfect=perfect,
+            braid=braided,
+            seed=seed,
+            output_file=output_filename
+        )
