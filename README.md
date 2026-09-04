@@ -315,3 +315,20 @@ when he was writing the validation section. Oh, well.
 ### How AI was used
 
 `<...>`
+
+So, for the visualiser we need a virtual environment but the setup is simple.
+Here's what I did to make it work on my machine (I have included only the most necessary steps).
+
+Run all these commands from root (maze-runners):
+
+1) mkdir vis (create a vis folder - where visualisation lives)
+2) download mlx-2.2.tgz off intra project page
+3) copy mlx-2.2.tgz from downloads to maze-runners/vis
+4) tar -xvf vis/mlx-2.2.tgz (unzip the folder - you will see src and fedora folder, do not touch those)
+5) python3 -m venv .venv (create the virtual environment)
+6) source .venv/bin/activate (activate the virtual environment)
+7) pip install vis/ubuntu/mlx-2.2-py3-none-any.whl
+8) Confirm success with python -c "from mlx import Mlx; print(Mlx().mlx_init())"
+
+I need to talk with Dan about what stuff we keep in vis and whether we include the .venv, 
+since the mlx stuff doesn't work without the venv
