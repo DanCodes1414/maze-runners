@@ -31,25 +31,18 @@ class MazeRender:
         self.maze_in_image_height = None
         self.maze_in_image_width = None
         self.colour = random.Random().choice(COLOUR_PAIRS)
+        self.screen = None
         self.grid = grid
+        self.mem = None
 
     def calculate_maze_in_image_size(self) -> None:
-        self.maze_in_image_height = self.height_in_cells * (self.cell_thick + 2 * self.wall_thick) + 2
-        self.maze_in_image_width = self.width_in_cells * (self.cell_thick + 2 * self.wall_thick) + 2
+        self.maze_in_image_height = self.height_in_cells * (self.cell_thick + 2 * self.wall_thick) + 2 * self.wall_thick # in pixels
+        self.maze_in_image_width = self.width_in_cells * (self.cell_thick + 2 * self.wall_thick) + 2 * self.wall_thick # in pixels
 
     def free_and_quit(self) -> None:
         self.m.mlx_destroy_image(self.mlx_ptr, self.img_ptr)
         self.m.mlx_destroy_window(self.mlx_ptr, self.win_ptr)
         self.m.mlx_release(self.mlx_ptr)
-
-    # def switch_colours(self) -> None:
-    #     """
-    #     Switches the colour for rendering the maze.
-    #     """
-    #     new_colour_pair = self.colours
-    #     while new_colour_pair == self.colours:
-    #         new_colour_pair = random.Random().choice(COLOUR_PAIRS)
-    #     self.colours = new_colour_pair
     
     def myclose(self, param) -> None:
         self.m.mlx_loop_exit(self.mlx_ptr)
@@ -62,13 +55,39 @@ class MazeRender:
         elif keynum == self.PATH_KEY:
             ...
         elif keynum == self.COLOUR_KEY:
-            ...
+            self.colour = random.Random().choice(COLOUR_PAIRS)
+            self.draw_maze(self.mem, self.grid, self.colour)
+            self.m.mlx_put_image_to_window(self.mlx_ptr, self.win_ptr, self.img_ptr, 0, 0)
 
-    def draw_maze(self, tup: tuple[memoryview, int, int, int], grid: list[list['Cell']], colour: ColourPair) -> None:
-        screen = tup[0] # in bytes
-        pixel_size = tup[1] / 8 # also in bytes
-        line_len = tup[2] # in bytes
-        #self.draw_border()
+    def draw_border_pixels(self, colour: ColourPair, line_len: int) -> None:
+        for i in range(int(line_len / 4)):
+            n = 4 * i
+            for j in range(self.wall_thick):
+                self.screen[j * line_len + n] = colour.walls[0]
+                self.screen[j * line_len + n + 1] = colour.walls[1]
+                self.screen[j * line_len + n + 2] = colour.walls[2]
+                self.screen[j * line_len + n + 3] = colour.walls[3]
+                self.screen[(self.maze_in_image_height - j - 1) * line_len + n] = colour.walls[0]
+                self.screen[(self.maze_in_image_height - j - 1) * line_len + n + 1] = colour.walls[1]
+                self.screen[(self.maze_in_image_height - j - 1) * line_len + n + 2] = colour.walls[2]
+                self.screen[(self.maze_in_image_height - j - 1) * line_len + n + 3] = colour.walls[3]
+        for i in range(self.maze_in_image_height):
+            for j in range(self.wall_thick):
+                self.screen[i * line_len + j * 4] = colour.walls[0]         
+                self.screen[i * line_len + j * 4 + 1] = colour.walls[1]
+                self.screen[i * line_len + j * 4 + 2] = colour.walls[2]
+                self.screen[i * line_len + j * 4 + 3] = colour.walls[3]
+                self.screen[(i + 1) * line_len - j * 4 - 4] = colour.walls[0]         
+                self.screen[(i + 1) * line_len - j * 4 - 3] = colour.walls[1]
+                self.screen[(i + 1) * line_len - j * 4 - 2] = colour.walls[2]
+                self.screen[(i + 1) * line_len - j * 4 - 1] = colour.walls[3]
+
+        
+    def draw_maze(self, mem: tuple[memoryview, int, int, int], grid: list[list['Cell']], colour: ColourPair) -> None:
+        self.screen = mem[0] # in bytes
+        pixel_size = mem[1] / 8 # in bytes
+        line_len = mem[2] # in bytes
+        self.draw_border_pixels(colour, line_len)
 
     def run_window(self) -> None:
         self.mlx_ptr = self.m.mlx_init()        
@@ -77,8 +96,8 @@ class MazeRender:
         self.win_ptr = self.m.mlx_new_window(self.mlx_ptr, self.win_width, self.win_height, "A-Maze-ing")
         self.m.mlx_clear_window(self.mlx_ptr, self.win_ptr)
         self.img_ptr = self.m.mlx_new_image(self.mlx_ptr, self.win_width, self.win_height)
-        tup = self.m.mlx_get_data_addr(self.img_ptr)
-        self.draw_maze(tup, self.grid, self.colour)
+        self.mem = self.m.mlx_get_data_addr(self.img_ptr)
+        self.draw_maze(self.mem, self.grid, self.colour)
         self.m.mlx_put_image_to_window(self.mlx_ptr, self.win_ptr, self.img_ptr, 0, 0)
         self.m.mlx_hook(self.win_ptr, self.EXIT_BUTTON, 0, self.myclose, None)
         self.m.mlx_key_hook(self.win_ptr, self.mykey, None)
