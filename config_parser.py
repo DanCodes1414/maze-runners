@@ -16,12 +16,11 @@ import sys
 import os
 from mazegen.config import MazeConfig
 
-MANDATORY_KEYS = ["WIDTH", "HEIGHT", "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"]
-
-ADDITIONAL_KEYS = ["SEED", "BRAIDED"]
-
 
 class MazeParsing:
+    MANDATORY_KEYS = ["WIDTH", "HEIGHT", "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"]
+
+    ADDITIONAL_KEYS = ["SEED", "BRAIDED"]
     """Namespace holding the parsing steps for a configuration file.
 
     The class keeps no state and is never instantiated: every method is
@@ -54,8 +53,8 @@ class MazeParsing:
                 non_comment_or_whitespace_lines.append(line)
         return non_comment_or_whitespace_lines
 
-    @staticmethod
-    def find_missing_keys(kv_dictionary: dict[str, str]) -> list[str]:
+    @classmethod
+    def find_missing_keys(cls, kv_dictionary: dict[str, str]) -> list[str]:
         """Return the mandatory keys missing from a parsed config.
 
         Args:
@@ -68,13 +67,13 @@ class MazeParsing:
             if none are missing.
         """
         missing_keys = []
-        for mandatory_key in MANDATORY_KEYS:
+        for mandatory_key in cls.MANDATORY_KEYS:
             if mandatory_key not in kv_dictionary.keys():
                 missing_keys.append(mandatory_key)
         return missing_keys
 
-    @staticmethod
-    def create_kv_dictionary(non_comment_lines: list[str]) -> dict[str, str]:
+    @classmethod
+    def create_kv_dictionary(cls, non_comment_lines: list[str]) -> dict[str, str]:
         """Map the recognised keys of a config file to their values.
 
         Each line is split on its first '='. The key is upper-cased and
@@ -98,7 +97,7 @@ class MazeParsing:
                 a recognised key is given an empty value.
         """
         kv_dictionary: dict[str, str] = {}
-        recognised_keys = MANDATORY_KEYS + ADDITIONAL_KEYS
+        recognised_keys = cls.MANDATORY_KEYS + cls.ADDITIONAL_KEYS
         for line in non_comment_lines:
             kv_pair = line.split('=', 1)
             key = kv_pair[0].upper().strip()
