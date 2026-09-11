@@ -1,13 +1,13 @@
 from pydantic import BaseModel
 
-
+# in the format BGRA
 GREY = (128, 128, 128, 255)
 WHITE = (255, 255, 255, 255)
 GREEN = (0, 255, 0, 255)
-RED = (255, 0, 0, 255)
-BLUE = (0, 0, 255, 255)
-INDIGO = (75, 0, 130, 255)
-YELLOW = (255, 255, 0, 255)
+RED = (0, 0, 255, 255)
+BLUE = (255, 0, 0, 255)
+INDIGO = (130, 0, 75, 255)
+YELLOW = (0, 255, 255, 255)
 
 
 class ColourPair(BaseModel):

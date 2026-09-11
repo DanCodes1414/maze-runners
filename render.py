@@ -59,35 +59,66 @@ class MazeRender:
             self.draw_maze(self.mem, self.grid, self.colour)
             self.m.mlx_put_image_to_window(self.mlx_ptr, self.win_ptr, self.img_ptr, 0, 0)
 
-    def draw_border_pixels(self, colour: ColourPair, line_len: int) -> None:
-        for i in range(int(line_len / 4)):
-            n = 4 * i
-            for j in range(self.wall_thick):
-                self.screen[j * line_len + n] = colour.walls[0]
-                self.screen[j * line_len + n + 1] = colour.walls[1]
-                self.screen[j * line_len + n + 2] = colour.walls[2]
-                self.screen[j * line_len + n + 3] = colour.walls[3]
-                self.screen[(self.maze_in_image_height - j - 1) * line_len + n] = colour.walls[0]
-                self.screen[(self.maze_in_image_height - j - 1) * line_len + n + 1] = colour.walls[1]
-                self.screen[(self.maze_in_image_height - j - 1) * line_len + n + 2] = colour.walls[2]
-                self.screen[(self.maze_in_image_height - j - 1) * line_len + n + 3] = colour.walls[3]
-        for i in range(self.maze_in_image_height):
-            for j in range(self.wall_thick):
-                self.screen[i * line_len + j * 4] = colour.walls[0]         
-                self.screen[i * line_len + j * 4 + 1] = colour.walls[1]
-                self.screen[i * line_len + j * 4 + 2] = colour.walls[2]
-                self.screen[i * line_len + j * 4 + 3] = colour.walls[3]
-                self.screen[(i + 1) * line_len - j * 4 - 4] = colour.walls[0]         
-                self.screen[(i + 1) * line_len - j * 4 - 3] = colour.walls[1]
-                self.screen[(i + 1) * line_len - j * 4 - 2] = colour.walls[2]
-                self.screen[(i + 1) * line_len - j * 4 - 1] = colour.walls[3]
+    def colour_pixel(self, coordinates: tuple[int, int], colour: tuple[int, int, int, int], line_len_in_pix: int) -> None:
+        x_coord, y_coord =  coordinates[0], coordinates[1]
+        self.screen[4 * (line_len_in_pix * y_coord + x_coord)] = colour[0]
+        self.screen[4 * (line_len_in_pix * y_coord + x_coord) + 1] = colour[1]
+        self.screen[4 * (line_len_in_pix * y_coord + x_coord) + 2] = colour[2]
+        self.screen[4 * (line_len_in_pix * y_coord + x_coord) + 3] = colour[3]
 
+    def colour_top_edge(self, top_left: tuple[int, int], bottom_right: tuple[int, int], line_len_in_pix: int) -> None:
+        top_left_x, top_left_y = top_left[0], top_left[1]
+        bottom_right_x = bottom_right[0]
+        for i in range(self.wall_thick):
+            for x in range(top_left_x, bottom_right_x):
+                self.colour_pixel((x, top_left_y + i), self.colour.walls, line_len_in_pix)
+
+    def colour_bottom_edge(self, top_left: tuple[int, int], bottom_right: tuple[int, int], line_len_in_pix: int) -> None:
+        top_left_x = top_left[0]
+        bottom_right_x, bottom_right_y = bottom_right[0], bottom_right[1]
+        for i in range(self.wall_thick):
+            for x in range(top_left_x, bottom_right_x):
+                self.colour_pixel((x, bottom_right_y - i - 1), self.colour.walls, line_len_in_pix)
+
+    def colour_right_edge(self, top_left: tuple[int, int], bottom_right: tuple[int, int], line_len_in_pix: int) -> None:
+        top_left_y = top_left[1]
+        bottom_right_x, bottom_right_y = bottom_right[0], bottom_right[1]
+        for i in range(self.wall_thick):
+            for y in range(top_left_y, bottom_right_y):
+                self.colour_pixel((bottom_right_x - i - 1, y), self.colour.walls, line_len_in_pix)
+
+    def colour_left_edge(self, top_left: tuple[int, int], bottom_right: tuple[int, int], line_len_in_pix: int) -> None:
+        top_left_x, top_left_y = top_left[0], top_left[1]
+        bottom_right_y = bottom_right[1]
+        for i in range(self.wall_thick):
+            for y in range(top_left_y, bottom_right_y):
+                self.colour_pixel((top_left_x + i, y), self.colour.walls, line_len_in_pix)       
+
+    def draw_cell(self, top_left: tuple[int, int], bottom_right: tuple[int, int], line_len_in_pix: int, walls: int) -> None:
+        top_left_x, top_left_y = top_left[0], top_left[1]
+        bottom_right_x, bottom_right_y = bottom_right[0], bottom_right[1]
+        for y in range(top_left_y, bottom_right_y):
+            for x in range(top_left_x, bottom_right_x):
+                self.colour_pixel((x, y), self.colour.path, line_len_in_pix)
+        if walls % 2 == 1:
+            self.colour_top_edge(top_left, bottom_right, line_len_in_pix)
+        if int(walls / 2) % 2 == 1:
+            self.colour_right_edge(top_left, bottom_right, line_len_in_pix)
+        if int(walls / 4) % 2 == 1:
+            self.colour_bottom_edge(top_left, bottom_right, line_len_in_pix)
+        if int(walls / 8) % 2 == 1:
+            self.colour_left_edge(top_left, bottom_right, line_len_in_pix)
         
     def draw_maze(self, mem: tuple[memoryview, int, int, int], grid: list[list['Cell']], colour: ColourPair) -> None:
         self.screen = mem[0] # in bytes
-        pixel_size = mem[1] / 8 # in bytes
-        line_len = mem[2] # in bytes
-        self.draw_border_pixels(colour, line_len)
+        self.draw_cell((0,0), (self.maze_in_image_width, self.maze_in_image_height), self.maze_in_image_width, 15)
+        for y in range(self.height_in_cells):
+            for x in range(self.width_in_cells):
+                top_left = (self.wall_thick + x * (self.cell_thick + 2 * self.wall_thick),
+                            self.wall_thick + y * (self.cell_thick + 2 * self.wall_thick))
+                bottom_right = (self.wall_thick + (x + 1) * (self.cell_thick + 2 * self.wall_thick),
+                            self.wall_thick + (y + 1) * (self.cell_thick + 2 * self.wall_thick))
+                self.draw_cell(top_left, bottom_right, self.maze_in_image_width, (grid[y][x]).walls)
 
     def run_window(self) -> None:
         self.mlx_ptr = self.m.mlx_init()        
