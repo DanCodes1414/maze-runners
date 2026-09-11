@@ -5,6 +5,7 @@ from mazegen.errors import MazeConfigError
 from mazegen.maze import Maze
 from render import MazeRender
 from parser_errors import MazeParserError
+from mazegen.generator import MazeGenerator
 import sys
 
 
@@ -25,7 +26,7 @@ def main() -> int:
         return 1
     maze = Maze(config=maze_config)
     maze.generate()
-    renderer = MazeRender(maze_config, maze.grid, w_thick=3)
+    renderer = MazeRender((maze_config.width, maze_config.height), maze, w_thick=3)
     renderer.run_window()
     return 0
 

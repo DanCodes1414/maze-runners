@@ -8,6 +8,7 @@ RED = (0, 0, 255, 255)
 BLUE = (255, 0, 0, 255)
 INDIGO = (130, 0, 75, 255)
 YELLOW = (0, 255, 255, 255)
+BLACK = (0, 0, 0, 0)
 
 
 class ColourPair(BaseModel):
@@ -18,4 +19,7 @@ class ColourPair(BaseModel):
 COLOUR_PAIRS = [
     ColourPair(walls=WHITE, path=BLUE),
     ColourPair(walls=YELLOW, path=INDIGO),
+    ColourPair(walls=GREEN, path=RED),
+    ColourPair(walls=GREY, path=BLACK)
+
 ]
