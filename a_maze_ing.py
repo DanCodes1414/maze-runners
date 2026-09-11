@@ -26,7 +26,7 @@ def main() -> int:
         return 1
     maze = Maze(config=maze_config)
     maze.generate()
-    renderer = MazeRender((maze_config.width, maze_config.height), maze, w_thick=3)
+    renderer = MazeRender((maze_config.width, maze_config.height), maze, w_thick=1)
     renderer.run_window()
     return 0
 

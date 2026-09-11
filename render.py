@@ -130,11 +130,12 @@ class MazeRender:
                 bottom_right = (self.wall_thick + (x + 1) * (self.cell_thick + 2 * self.wall_thick),
                             self.wall_thick + (y + 1) * (self.cell_thick + 2 * self.wall_thick))
                 self.draw_cell(top_left, bottom_right, self.maze_in_image_width, ((self.grid)[y][x]).walls)
+        self.m.mlx_string_put(self.mlx_ptr, self.win_ptr, 2, self.maze_in_image_height + 2, 400, "1: regen  2: path  3: colour  4: walls")
 
     def run_window(self) -> None:
         self.mlx_ptr = self.m.mlx_init()        
         self.calculate_maze_in_image_size()
-        self.win_width, self.win_height = self.maze_in_image_width, self.maze_in_image_height #+ text_height
+        self.win_width, self.win_height = self.maze_in_image_width, self.maze_in_image_height + 25 # for text at the bottom
         self.win_ptr = self.m.mlx_new_window(self.mlx_ptr, self.win_width, self.win_height, "A-Maze-ing")
         self.m.mlx_clear_window(self.mlx_ptr, self.win_ptr)
         self.img_ptr = self.m.mlx_new_image(self.mlx_ptr, self.win_width, self.win_height)
