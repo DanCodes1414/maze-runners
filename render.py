@@ -7,8 +7,6 @@ The window becomes unresponsive, type 'fg' (foreground) in the terminal to resol
 """
 import random
 from mlx import Mlx
-from mazegen.config import MazeConfig
-from mazegen.cell import Cell
 from mazegen.colours import ColourPair, COLOUR_PAIRS
 from mazegen.maze import Maze
 
@@ -18,7 +16,7 @@ class MazeRender:
     REGEN_KEY, PATH_KEY, COLOUR_KEY, EXIT_KEY = 49, 50, 51, 52
     EXIT_BUTTON = 33
 
-    def __init__(self, maze_dimensions: tuple[int, int], maze: Maze, c_thick: int = 10, w_thick: int = 1) -> None:
+    def __init__(self, maze_dimensions: tuple[int, int], maze: Maze, c_thick: int = 12, w_thick: int = 2) -> None:
         self.m = Mlx()
         self.mlx_ptr = None
         self.win_width = None
@@ -30,16 +28,16 @@ class MazeRender:
         self.height_in_cells = maze_dimensions[1]
         self.cell_thick = c_thick
         self.wall_thick = w_thick
-        self.maze_in_image_height = None
-        self.maze_in_image_width = None
+        self.maze_height_in_pixels = None
+        self.maze_width_in_pixels = None
         self.colour_pair = random.Random().choice(COLOUR_PAIRS)
         self.screen = None
         self.grid = maze.grid
         self.mem = None
 
     def calculate_maze_in_image_size(self) -> None:
-        self.maze_in_image_height = self.height_in_cells * (self.cell_thick + 2 * self.wall_thick) + 2 * self.wall_thick # in pixels
-        self.maze_in_image_width = self.width_in_cells * (self.cell_thick + 2 * self.wall_thick) + 2 * self.wall_thick # in pixels
+        self.maze_height_in_pixels = self.height_in_cells * (self.cell_thick + 2 * self.wall_thick) + 2 * self.wall_thick
+        self.maze_width_in_pixels = self.width_in_cells * (self.cell_thick + 2 * self.wall_thick) + 2 * self.wall_thick
 
     def free_and_quit(self) -> None:
         self.m.mlx_destroy_image(self.mlx_ptr, self.img_ptr)
@@ -70,72 +68,80 @@ class MazeRender:
             self.draw_maze(self.mem)
             self.m.mlx_put_image_to_window(self.mlx_ptr, self.win_ptr, self.img_ptr, 0, 0)
 
-    def colour_pixel(self, coordinates: tuple[int, int], colour: tuple[int, int, int, int], line_len_in_pix: int) -> None:
+    def colour_pixel(self, coordinates: tuple[int, int], colour: tuple[int, int, int, int]) -> None:
         x_coord, y_coord =  coordinates[0], coordinates[1]
+        line_len_in_pix = self.maze_width_in_pixels # this is incorrect btw - it's what's causing the distortion
         self.screen[4 * (line_len_in_pix * y_coord + x_coord)] = colour[0]
         self.screen[4 * (line_len_in_pix * y_coord + x_coord) + 1] = colour[1]
         self.screen[4 * (line_len_in_pix * y_coord + x_coord) + 2] = colour[2]
         self.screen[4 * (line_len_in_pix * y_coord + x_coord) + 3] = colour[3]
 
-    def colour_top_edge(self, top_left: tuple[int, int], bottom_right: tuple[int, int], line_len_in_pix: int) -> None:
+    def colour_top_edge(self, top_left: tuple[int, int], bottom_right: tuple[int, int]) -> None:
         top_left_x, top_left_y = top_left[0], top_left[1]
         bottom_right_x = bottom_right[0]
         for i in range(self.wall_thick):
             for x in range(top_left_x, bottom_right_x):
-                self.colour_pixel((x, top_left_y + i), self.colour_pair.walls, line_len_in_pix)
+                self.colour_pixel((x, top_left_y + i), self.colour_pair.walls)
 
-    def colour_bottom_edge(self, top_left: tuple[int, int], bottom_right: tuple[int, int], line_len_in_pix: int) -> None:
+    def colour_bottom_edge(self, top_left: tuple[int, int], bottom_right: tuple[int, int]) -> None:
         top_left_x = top_left[0]
         bottom_right_x, bottom_right_y = bottom_right[0], bottom_right[1]
         for i in range(self.wall_thick):
             for x in range(top_left_x, bottom_right_x):
-                self.colour_pixel((x, bottom_right_y - i - 1), self.colour_pair.walls, line_len_in_pix)
+                self.colour_pixel((x, bottom_right_y - i - 1), self.colour_pair.walls)
 
-    def colour_right_edge(self, top_left: tuple[int, int], bottom_right: tuple[int, int], line_len_in_pix: int) -> None:
+    def colour_right_edge(self, top_left: tuple[int, int], bottom_right: tuple[int, int]) -> None:
         top_left_y = top_left[1]
         bottom_right_x, bottom_right_y = bottom_right[0], bottom_right[1]
         for i in range(self.wall_thick):
             for y in range(top_left_y, bottom_right_y):
-                self.colour_pixel((bottom_right_x - i - 1, y), self.colour_pair.walls, line_len_in_pix)
+                self.colour_pixel((bottom_right_x - i - 1, y), self.colour_pair.walls)
 
-    def colour_left_edge(self, top_left: tuple[int, int], bottom_right: tuple[int, int], line_len_in_pix: int) -> None:
+    def colour_left_edge(self, top_left: tuple[int, int], bottom_right: tuple[int, int]) -> None:
         top_left_x, top_left_y = top_left[0], top_left[1]
         bottom_right_y = bottom_right[1]
         for i in range(self.wall_thick):
             for y in range(top_left_y, bottom_right_y):
-                self.colour_pixel((top_left_x + i, y), self.colour_pair.walls, line_len_in_pix)       
+                self.colour_pixel((top_left_x + i, y), self.colour_pair.walls)       
 
-    def draw_cell(self, top_left: tuple[int, int], bottom_right: tuple[int, int], line_len_in_pix: int, walls: int) -> None:
+    def draw_cell(self, top_left: tuple[int, int], bottom_right: tuple[int, int], walls: int) -> None:
         top_left_x, top_left_y = top_left[0], top_left[1]
         bottom_right_x, bottom_right_y = bottom_right[0], bottom_right[1]
+        if top_left != (0, 0) and walls == 15:
+            path_colour = tuple(int((colour * 2) / 3) for colour in self.colour_pair.path)
+        else:
+            path_colour = self.colour_pair.path
         for y in range(top_left_y, bottom_right_y):
             for x in range(top_left_x, bottom_right_x):
-                self.colour_pixel((x, y), self.colour_pair.path, line_len_in_pix)
+                self.colour_pixel((x, y), path_colour)
         if walls % 2 == 1:
-            self.colour_top_edge(top_left, bottom_right, line_len_in_pix)
+            self.colour_top_edge(top_left, bottom_right)
         if int(walls / 2) % 2 == 1:
-            self.colour_right_edge(top_left, bottom_right, line_len_in_pix)
+            self.colour_right_edge(top_left, bottom_right)
         if int(walls / 4) % 2 == 1:
-            self.colour_bottom_edge(top_left, bottom_right, line_len_in_pix)
+            self.colour_bottom_edge(top_left, bottom_right)
         if int(walls / 8) % 2 == 1:
-            self.colour_left_edge(top_left, bottom_right, line_len_in_pix)
+            self.colour_left_edge(top_left, bottom_right)
         
     def draw_maze(self, mem: tuple[memoryview, int, int, int]) -> None:
         self.screen = mem[0] # in bytes
-        self.draw_cell((0,0), (self.maze_in_image_width, self.maze_in_image_height), self.maze_in_image_width, 15)
+        self.draw_cell((0,0), (self.maze_width_in_pixels, self.maze_height_in_pixels), 15)
         for y in range(self.height_in_cells):
             for x in range(self.width_in_cells):
                 top_left = (self.wall_thick + x * (self.cell_thick + 2 * self.wall_thick),
                             self.wall_thick + y * (self.cell_thick + 2 * self.wall_thick))
                 bottom_right = (self.wall_thick + (x + 1) * (self.cell_thick + 2 * self.wall_thick),
                             self.wall_thick + (y + 1) * (self.cell_thick + 2 * self.wall_thick))
-                self.draw_cell(top_left, bottom_right, self.maze_in_image_width, ((self.grid)[y][x]).walls)
-        self.m.mlx_string_put(self.mlx_ptr, self.win_ptr, 2, self.maze_in_image_height + 2, 400, "1: regen  2: path  3: colour  4: walls")
+                self.draw_cell(top_left, bottom_right, ((self.grid)[y][x]).walls)
+        text_string = "1: regen  2: path  3: colour  4: walls"
+        self.m.mlx_string_put(self.mlx_ptr, self.win_ptr, 2, self.maze_height_in_pixels + 2, 0xFFFFFF, text_string)
 
     def run_window(self) -> None:
         self.mlx_ptr = self.m.mlx_init()        
         self.calculate_maze_in_image_size()
-        self.win_width, self.win_height = self.maze_in_image_width, self.maze_in_image_height + 25 # for text at the bottom
+        text_height = 25
+        self.win_width = self.maze_width_in_pixels
+        self.win_height = self.maze_height_in_pixels + text_height
         self.win_ptr = self.m.mlx_new_window(self.mlx_ptr, self.win_width, self.win_height, "A-Maze-ing")
         self.m.mlx_clear_window(self.mlx_ptr, self.win_ptr)
         self.img_ptr = self.m.mlx_new_image(self.mlx_ptr, self.win_width, self.win_height)

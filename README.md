@@ -332,3 +332,5 @@ Run all these commands from root (maze-runners):
 
 I need to talk with Dan about what stuff we keep in vis and whether we include the .venv, 
 since the mlx stuff doesn't work without the venv
+
+Ok so I am not an artist so I asked Claude do generate colours and colour combinations for me
