@@ -1,8 +1,7 @@
 from pydantic import BaseModel, Field, model_validator
 from typing import Self
 from .errors import (
-    OutputFilenameError, PointError, ContradictionError, InvalidDimensionError, MazeTooSmallError, PointOutOfBoundsError, BlockedCellsError
-)
+    OutputFilenameError, PointError, ContradictionError, InvalidDimensionError, MazeTooSmallError, MazeTooBigError, BlockedCellsError, PointOutOfBoundsError)
 from .cell import get_blocked_cells
 
 
@@ -75,6 +74,7 @@ class MazeConfig(BaseModel):
         maze_dimensions = (self.width, self.height)
         self.entry = MazeConfig.validate_point("ENTRY", self.entry, maze_dimensions)
         self.exit = MazeConfig.validate_point("EXIT", self.exit, maze_dimensions)
+        print("we got yuy")
         if (self.entry == self.exit):
             raise PointError()
         if self.braid and self.perfect:
@@ -137,10 +137,16 @@ class MazeConfig(BaseModel):
         """
         min_width = 4
         min_height = 4
+        max_height = 50
+        max_width = 50
         if width < min_width:
             raise MazeTooSmallError("width", min_width)
         if height < min_height:
             raise MazeTooSmallError("height", min_height)
+        if width > max_width:
+            raise MazeTooBigError("width", max_width)
+        if height > max_height:
+            raise MazeTooBigError("height", max_height)        
         return (width, height)
 
     @staticmethod
@@ -168,5 +174,7 @@ class MazeConfig(BaseModel):
         point_coords = (point_coords[1], point_coords[0])
         blocked_cells = get_blocked_cells(maze_dimensions[1], maze_dimensions[0])
         if point_coords in blocked_cells:
+            # print(f"{point_coords}")
+            # print(f"{blocked_cells}")
             raise BlockedCellsError(point_name)
         return point_coords

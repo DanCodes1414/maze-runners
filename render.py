@@ -54,12 +54,15 @@ class MazeRender:
         self.line_len_in_pix = None
 
     def calculate_thickness(self) -> tuple[int, int]:
-        if self.width_in_cells < 6 or self.height_in_cells < 6:
+        if self.width_in_cells < 5 and self.height_in_cells < 5:
+            cell_thick = 60
+            wall_thick = 12
+        elif (self.width_in_cells < 6 and self.width_in_cells >= 5) and (self.height_in_cells < 6 and self.height_in_cells >= 5):
             cell_thick = 50
             wall_thick = 10
         else:
-            cell_thick = 10
-            wall_thick = 2
+            cell_thick = 15
+            wall_thick = 3
         return(cell_thick, wall_thick)
 
     def calculate_maze_in_image_size(self) -> None:

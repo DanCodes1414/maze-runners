@@ -5,7 +5,6 @@ from mazegen.errors import MazeConfigError
 from mazegen.maze import Maze
 from render import MazeRender
 from parser_errors import MazeParserError
-from mazegen.generator import MazeGenerator
 import sys
 
 
@@ -24,11 +23,12 @@ def main() -> int:
     except Exception as e:
         print(f"Unexpected Error in Parsing and Validation: {e}", file=sys.stderr)
         return 1
-    maze = Maze(config=maze_config)
-    maze.generate()
-    renderer = MazeRender((maze_config.width, maze_config.height), maze)
-    #maze.export()
-    renderer.run_window()
+    else:
+        maze = Maze(config=maze_config)
+        maze.generate()
+        renderer = MazeRender((maze_config.width, maze_config.height), maze)
+        #maze.export()
+        renderer.run_window()
     return 0
 
 

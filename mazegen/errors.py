@@ -32,14 +32,6 @@ class PointError(MazeConfigError):
         super().__init__("Entry and exit points cannot be the same.")
 
 
-# class MazeTooSmallError(MazeConfigError):
-#     """Raise when the maze dimensions are below the minimum allowed size."""
-#     def __init__(self, maze_dimension: str, num: int, maze_type: str) -> None:
-#         super().__init__(
-#             f"The {maze_dimension} of the maze is too small. "
-#             f"{maze_dimension.capitalize()} must be at least {num} in a {maze_type} maze."
-#         )
-
 class MazeTooSmallError(MazeConfigError):
     """Raise when the maze dimensions are below the minimum allowed size."""
     def __init__(self, maze_dimension: str, num: int) -> None:
@@ -47,6 +39,16 @@ class MazeTooSmallError(MazeConfigError):
             f"The {maze_dimension} of the maze is too small. "
             f"{maze_dimension.capitalize()} must be at least {num}."
         )
+
+
+class MazeTooBigError(MazeConfigError):
+    """Raise when the maze dimensions are above the minimum allowed size."""
+    def __init__(self, maze_dimension: str, num: int) -> None:
+        super().__init__(
+            f"The {maze_dimension} of the maze is too big. "
+            f"{maze_dimension.capitalize()} must be at most {num}."
+        )
+
 
 class ContradictionError(MazeConfigError):
     """Raise when both the BRAID and PERFECT flags are set.
@@ -57,10 +59,11 @@ class ContradictionError(MazeConfigError):
         super().__init__("Maze cannot be both perfect and braided")
 
 
+class OutputFilenameError(MazeConfigError):
+    """Raise when the value assigned to OUTPUT_FILE is not acceptable."""
+
+
 class BlockedCellsError(MazeConfigError):
     """Raise when ENTRY/EXIT point is in blocked (by 42 logo) cells."""
     def __init__(self, point_name: str) -> None:
         super().__init__(f"{point_name} point cannot be in blocked cells.")
-
-class OutputFilenameError(MazeConfigError):
-    """Raise when the value assigned to OUTPUT_FILE is not acceptable."""
