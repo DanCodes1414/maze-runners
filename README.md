@@ -5,85 +5,207 @@
 ## Description
 
 A-Maze-ing generates a maze from a plain-text configuration file, writes it to
-disk using a hexadecimal wall encoding, and displays it. The maze can either be
-perfect (exactly one path between entry and exit) or a playable board with
-loops and no dead ends, depending on the configuration.
+disk using hexadecimal wall encoding, and displays it graphically.
 
-The generation logic itself lives in `mazegen`, a standalone Python package that
-can be built as a wheel and installed into another project with `pip`. See
-[Reusable code](#reusable-code).
+Depending on the configuration, the generated maze can be:
 
-`<rewrite this in your own words — it is the first thing a peer reads>`
+- A perfect maze with exactly one path between the entry and exit.
+- A playable Pac-Man-style board containing loops and alternative routes.
+- A braided maze with no dead ends.
+
+The reusable generation logic lives in `mazegen`, a standalone Python package
+that can be built as a wheel and installed into another project.
 
 ## Instructions
 
+### Requirements
+
+- Python 3.10 or later
+- A Linux graphical environment
+- The Python `venv` module
+- MiniLibX
+
+The MiniLibX installation files required by the visualizer are included in
+`vis_src`:
+
+```text
+vis_src/
+├── fedora/
+│   └── mlx-2.2-py3-none-any.whl
+├── mlx-2.2.tgz
+├── src/
+│   └── mlx_CLXV-2.2.tgz
+└── ubuntu/
+    └── mlx-2.2-py3-none-any.whl
 ```
+
+### Setting up MiniLibX
+
+Run the following commands from the root of the repository.
+
+Create a virtual environment:
+
+```bash
+python3 -m venv .venv
+```
+
+Activate it:
+
+```bash
+source .venv/bin/activate
+```
+
+Install the MiniLibX wheel matching your Linux distribution.
+
+On Ubuntu:
+
+```bash
+python -m pip install vis_src/ubuntu/mlx-2.2-py3-none-any.whl
+```
+
+On Fedora:
+
+```bash
+python -m pip install vis_src/fedora/mlx-2.2-py3-none-any.whl
+```
+
+The source archives are also included in `vis_src` for reference or for systems
+where MiniLibX needs to be rebuilt.
+
+Confirm that the Python package can be imported:
+
+```bash
+python -c "from mlx import Mlx; print('MiniLibX import successful')"
+```
+
+To check whether MiniLibX can connect to the graphical display:
+
+```bash
+python -c "from mlx import Mlx; print(Mlx().mlx_init())"
+```
+
+A non-`None` pointer means that MiniLibX initialized successfully.
+
+This second command must be run from a graphical session. It may return `None`
+when run through SSH, a headless terminal, or an environment without access to
+the display, even if the package was installed correctly.
+
+The virtual environment must be activated again whenever a new terminal is
+opened:
+
+```bash
+source .venv/bin/activate
+```
+
+The `.venv` directory is machine-specific and must not be submitted. It should
+be included in `.gitignore`.
+
+### Running the program
+
+Run the program from the root of the repository:
+
+```bash
 python3 a_maze_ing.py config.txt
 ```
 
 `a_maze_ing.py` takes exactly one argument: the path to a configuration file.
-Any configuration error stops the program with a message on `stderr` and exit
-code 1; a successful run exits with 0.
+
+A configuration error stops the program, prints an error message to `stderr`,
+and exits with status code 1. A successful run exits with status code 0.
+
+### Visualizer controls
+
+| Key | Action |
+| --- | --- |
+| `1` | Generate and display a new maze |
+| `2` | Show or hide the shortest path |
+| `3` | Change the maze colours |
+| `4` | Quit the program |
+
+The visualizer can also be closed using the window's close button.
+
+Pressing `Ctrl-Z` suspends the process. If this happens, return it to the
+foreground by entering the following command in the terminal:
+
+```bash
+fg
+```
+
 
 ## Configuration file
 
-A default configuration is provided in `config.txt` at the root of the
+A default configuration file is provided as `config.txt` at the root of the
 repository.
 
 ### Format
 
-- One `KEY=VALUE` pair per line. The key is everything before the first `=`,
-  so a value may itself contain further `=` characters.
-- Lines whose first non-whitespace character is `#` are comments. There are no
-  inline comments: `WIDTH=20 # cells` sets `WIDTH` to `20 # cells`, which then
-  fails to convert to an integer.
+- Each setting uses one `KEY=VALUE` pair per line.
+- The key is everything before the first `=`.
 - Blank lines are ignored.
-- Whitespace around keys and values is ignored, so `WIDTH = 20` is fine.
-- Keys are case-insensitive (`width=20` and `WIDTH=20` are equivalent).
-- Keys that are not listed below are ignored, but every line still has to
-  contain an `=`: a line without one is a syntax error whether or not its key
-  is recognised.
+- Lines whose first non-whitespace character is `#` are comments.
+- Inline comments are not supported.
+- Whitespace around keys and values is ignored.
+- Keys are case-insensitive.
+- Unknown keys are ignored, but their lines must still contain an `=`.
 - A recognised key with an empty value is a syntax error.
-- If a recognised key appears twice, the first value is kept and a warning is
-  printed to `stderr`.
+- If a recognised key appears more than once, the first value is kept and a
+  warning is printed to `stderr`.
+
+For example:
+
+```ini
+WIDTH = 20
+```
+
+is valid, while:
+
+```ini
+WIDTH=20 # cells
+```
+
+is not. Because inline comments are not supported, the value is interpreted as
+`20 # cells` and cannot be converted to an integer.
 
 ### Mandatory keys
 
-| Key           | Meaning                        | Value format                 | Example                |
-|---------------|--------------------------------|------------------------------|------------------------|
-| `WIDTH`       | Maze width in cells            | integer                      | `WIDTH=20`             |
-| `HEIGHT`      | Maze height in cells           | integer                      | `HEIGHT=15`            |
-| `ENTRY`       | Entry cell                     | `x,y`, zero-based            | `ENTRY=0,0`            |
-| `EXIT`        | Exit cell                      | `x,y`, zero-based            | `EXIT=19,14`           |
-| `OUTPUT_FILE` | Where the maze is written      | bare filename, no directory  | `OUTPUT_FILE=maze.txt` |
-| `PERFECT`     | Generate a perfect maze?       | `True` or `False`, any case  | `PERFECT=True`         |
+| Key | Meaning | Value format | Example |
+| --- | --- | --- | --- |
+| `WIDTH` | Maze width in cells | Integer | `WIDTH=20` |
+| `HEIGHT` | Maze height in cells | Integer | `HEIGHT=15` |
+| `ENTRY` | Entry cell | Zero-based `x,y` coordinates | `ENTRY=0,0` |
+| `EXIT` | Exit cell | Zero-based `x,y` coordinates | `EXIT=19,14` |
+| `OUTPUT_FILE` | File where the maze is written | Filename without a directory | `OUTPUT_FILE=maze.txt` |
+| `PERFECT` | Whether to generate a perfect maze | `True` or `False`, case-insensitive | `PERFECT=True` |
 
 ### Optional keys
 
-| Key       | Meaning                                  | Value format                | Default when absent                |
-|-----------|------------------------------------------|-----------------------------|------------------------------------|
-| `SEED`    | Seed for reproducible generation         | non-negative integer        | a random seed is used              |
-| `BRAIDED` | Generate a board with no dead ends at all | `True` or `False`, any case | `False` (dead ends are tolerated)  |
+| Key | Meaning | Value format | Default |
+| --- | --- | --- | --- |
+| `SEED` | Seed used for reproducible generation | Non-negative integer | A random seed |
+| `BRAIDED` | Whether to remove all dead ends | `True` or `False`, case-insensitive | `False` |
 
 ### Validity rules
 
-- A perfect maze needs both dimensions to be at least 1 and an area of at
-  least 2.
-- An imperfect maze needs both dimensions to be at least 2 and an area of at
-  least 6. A grid of W×H cells can hold at most (W−1)(H−1) independent loops,
-  and the subject requires at least two, so 2×3 is the smallest playable board.
-- `ENTRY` and `EXIT` must lie inside the grid (0 ≤ x < WIDTH, 0 ≤ y < HEIGHT)
-  and must be different cells.
-- `OUTPUT_FILE` may not contain `/` and may not be the configuration file
-  itself. The second check resolves both paths, so a symbolic link or a
-  different relative path leading back to the configuration file is caught too.
-- `PERFECT` and `BRAIDED` cannot both be `True`: a braided board contains loops
-  by definition.
+- A perfect maze requires both dimensions to be at least 1 and its total area
+  to be at least 2.
+- An imperfect maze requires both dimensions to be at least 2 and its total
+  area to be at least 6.
+- `ENTRY` and `EXIT` must be inside the maze.
+- `ENTRY` and `EXIT` must refer to different cells.
+- `OUTPUT_FILE` may not contain `/`.
+- `OUTPUT_FILE` may not refer to the configuration file itself.
+- `PERFECT` and `BRAIDED` cannot both be `True`, because a braided maze contains
+  loops by definition.
 
-### Example
+An imperfect grid must support at least two independent loops. A grid containing
+W by H cells can hold at most `(W - 1)(H - 1)` independent loops, making 2 by 3
+the smallest supported imperfect maze.
+
+### Example configuration
 
 ```ini
 # Default A-Maze-ing configuration
+
 WIDTH=20
 HEIGHT=15
 ENTRY=0,0
@@ -91,65 +213,145 @@ EXIT=19,14
 OUTPUT_FILE=maze.txt
 PERFECT=False
 SEED=42
+BRAIDED=False
 ```
 
 ### Example errors
 
-| Line               | Message                                                              |
-|--------------------|----------------------------------------------------------------------|
-| `WIDTH=abc`        | `Error: ValueError on WIDTH. WIDTH value in configuration file: 'abc'` |
-| `EXIT=0,0` (same as entry) | `Error: Entry and exit points cannot be the same.`           |
-| `HEIGHT` missing   | `Error: The following mandatory keys are missing: ['HEIGHT']`        |
+| Invalid configuration | Result |
+| --- | --- |
+| `WIDTH=abc` | `Error: ValueError on WIDTH. WIDTH value in configuration file: 'abc'` |
+| Entry and exit both set to `0,0` | `Error: Entry and exit points cannot be the same.` |
+| `HEIGHT` is missing | `Error: The following mandatory keys are missing: ['HEIGHT']` |
 
 ## Maze generation algorithm
 
-The generator uses a cellular automaton. Each cell of the grid holds a state:
-`FREE`, `SEED` or `BLOCKED`. The algorithm repeatedly processes the `SEED`
-cells; each one invites its neighbouring `FREE` cells to connect to it, and a
-newly connected cell becomes a `SEED` itself with a fixed probability, which is
-what makes the maze branch. It stops when no `FREE` cell is left, so every cell
-ends up either connected or blocked.
+The generator uses a cellular automaton. Each cell has one of three states:
 
-That pass produces a perfect maze. The configuration flags then modify it:
+- `FREE`
+- `SEED`
+- `BLOCKED`
 
-- With `PERFECT=False`, eligible walls are chosen at random and broken down.
-  This adds the loops and independent routes a Pac-Man-style board needs.
-- With `BRAIDED=True`, dead ends are removed as well, so the board has none at
-  all.
+The algorithm repeatedly processes the `SEED` cells. Each seed attempts to
+connect to neighbouring `FREE` cells. A newly connected cell can become a new
+`SEED`, causing the maze to grow and branch.
 
-`<how the "42" pattern is placed, and how it relates to the BLOCKED state>`
+Generation stops when no `FREE` cells remain. At this point, every cell has
+either been connected to the maze or marked as blocked.
+
+This initial generation produces a perfect maze. The configuration flags can
+then modify it:
+
+- With `PERFECT=True`, no additional walls are removed, so exactly one route
+  exists between any two connected cells.
+- With `PERFECT=False`, eligible walls are selected randomly and removed. This
+  creates loops and independent routes suitable for a Pac-Man-style board.
+- With `BRAIDED=True`, the remaining dead ends are removed.
+
+The visible `42` pattern is represented using `BLOCKED` cells. These cells are
+fully enclosed and excluded from the connected maze structure.
 
 ### Why this algorithm
 
-`<your reasoning — what made the cellular automaton the right choice for you>`
+The cellular automaton was chosen because it builds the maze incrementally
+while keeping the state of every cell explicit. The `FREE`, `SEED`, and
+`BLOCKED` states make it possible to control how the maze expands and to reserve
+cells for the `42` pattern.
+
+The branching probability introduces randomness without requiring recursive
+function calls. Starting with a connected perfect maze also provides a useful
+foundation for both required generation modes: it can be kept unchanged for a
+perfect maze or modified by removing walls to produce a board with loops.
+
+## Output file
+
+Each maze cell is represented by one hexadecimal digit. The four least
+significant bits describe its walls:
+
+| Bit | Direction |
+| --- | --- |
+| `0` | North |
+| `1` | East |
+| `2` | South |
+| `3` | West |
+
+A set bit means that the wall is closed. A cleared bit means that the wall is
+open.
+
+The maze is written row by row, with one output line for each row of cells.
+
+After the maze grid, the file contains an empty line followed by:
+
+1. The entry coordinates.
+2. The exit coordinates.
+3. The shortest valid path using the letters `N`, `E`, `S`, and `W`.
+
+Every line ends with a newline character.
+
+## Visualizer
+
+The graphical visualizer is implemented with MiniLibX. The maze is drawn into
+an image buffer before the complete image is copied to the window.
+
+The visualizer is divided into three classes:
+
+| Class | Responsibility |
+| --- | --- |
+| `Canvas` | Writes individual pixels and filled rectangles into an MLX image |
+| `MazePainter` | Calculates maze dimensions and draws cells, walls, blocked cells, and colours |
+| `MazeRender` | Manages the MLX window, keyboard callbacks, regeneration, refreshing, and cleanup |
+
+This separation keeps raw image-buffer operations out of the maze drawing code.
+It also keeps MiniLibX window management separate from the rules used to draw
+the maze.
+
+The maze generator does not import or depend on the visualizer.
 
 ## Reusable code
 
-The `mazegen` package is the reusable part of this project. It contains the
-classes needed to generate, solve and export a maze, and nothing that depends
-on the rest of the repository, so it can be installed into any other project.
+The reusable part of the project is the `mazegen` package. It contains the
+classes needed to configure, generate, solve, and export a maze.
 
-### Installing the package
+It does not depend on the configuration-file parser or the graphical
+visualizer, allowing it to be installed and reused in another project.
 
-The package is built from the root of the repository with:
+### Building the package
 
-```
+Build the package from the root of the repository:
+
+```bash
 python -m build
 ```
 
-This produces a `.tar.gz` and a `.whl` file named `mazegen-*`. To use the
-package in another project:
+This produces a source distribution and a wheel with names similar to:
 
-1. Copy the `.tar.gz` or `.whl` file into your project directory.
-2. From that directory, run `pip install mazegen-1.0.0-py3-none-any.whl`
-   (or the `.tar.gz` equivalent).
-3. `import mazegen` now works from anywhere in that project.
+```text
+mazegen-1.0.0.tar.gz
+mazegen-1.0.0-py3-none-any.whl
+```
+
+### Installing the package
+
+Install the wheel with:
+
+```bash
+python -m pip install mazegen-1.0.0-py3-none-any.whl
+```
+
+Alternatively, install the source distribution:
+
+```bash
+python -m pip install mazegen-1.0.0.tar.gz
+```
+
+After installation, `mazegen` can be imported from any Python program using
+that environment.
 
 ### Basic example
 
 ```python
-from mazegen.maze import Maze
 from mazegen.config import MazeConfig
+from mazegen.maze import Maze
 
 maze_config = MazeConfig(
     width=25,
@@ -158,8 +360,10 @@ maze_config = MazeConfig(
     exit=(18, 13),
     perfect=False,
     braid=False,
+    seed=42,
     output_file="output.txt",
 )
+
 maze = Maze(config=maze_config)
 maze.generate()
 maze.solve()
@@ -170,84 +374,105 @@ maze.export()
 
 All generation parameters are passed through `MazeConfig`:
 
-| Parameter     | Meaning                                                                 |
-|---------------|-------------------------------------------------------------------------|
-| `width`       | Maze width in cells.                                                    |
-| `height`      | Maze height in cells.                                                   |
-| `entry`       | Coordinates of the entry cell.                                          |
-| `exit`        | Coordinates of the exit cell.                                           |
-| `seed`        | Optional. Seed for random generation, for reproducible mazes. A random seed is used when omitted. |
-| `perfect`     | `True` generates a perfect maze (no loops).                             |
-| `braid`       | `True` generates a braided maze: loops, and no dead ends.               |
-| `output_file` | Name of the file `export()` writes to.                                  |
+| Parameter | Meaning |
+| --- | --- |
+| `width` | Maze width in cells |
+| `height` | Maze height in cells |
+| `entry` | Entry-cell coordinates |
+| `exit` | Exit-cell coordinates |
+| `perfect` | Whether the maze must contain exactly one route |
+| `braid` | Whether all dead ends should be removed |
+| `seed` | Optional seed for reproducible generation |
+| `output_file` | Name of the file written by `export()` |
 
-Passing the same `seed` with the same dimensions produces the same maze every
-time:
+Using the same dimensions and seed produces the same maze:
 
 ```python
-config = MazeConfig(width=25, height=20, entry=(0, 0), exit=(18, 13),
-                    perfect=True, braid=False, seed=42,
-                    output_file="output.txt")
+config = MazeConfig(
+    width=25,
+    height=20,
+    entry=(0, 0),
+    exit=(18, 13),
+    perfect=True,
+    braid=False,
+    seed=42,
+    output_file="output.txt",
+)
 ```
 
-### Accessing the structure and the solution
+### Accessing the generated maze
 
-`<how a user reads the grid out of a Maze object, and how they read the
-solution — attribute names and what the values look like>`
+The generated cell structure is available through:
 
-### Classes
+```python
+maze.grid
+```
 
-- **`Cell`** — the position and walls of a single cell of the maze.
-- **`MazeConfig`** — the configuration a maze is generated from, and the
-  validation of those values. See the table above.
-- **`Maze`** — the maze itself, with `generate()`, `solve()` and `export()`.
+Each item in the grid is a `Cell` containing its coordinates, state, and wall
+data.
 
-The same documentation ships inside the package, so anyone who installs the
-wheel has it without visiting this repository.
+Generate and solve the maze with:
 
-## Parsing and validation (dmgeorgi)
+```python
+maze.generate()
+maze.solve()
+```
 
-Configuration handling is split across four modules so that the validation
-logic can be packaged without the file-parsing code:
+The solution is the shortest valid route from the configured entry to the
+configured exit.
 
-| Module              | Responsibility                                                    |
-|---------------------|-------------------------------------------------------------------|
-| `mazegen/errors.py` | The `MazeConfigError` exception hierarchy. Imports nothing from the project. |
-| `mazegen/config.py` | The `MazeConfig` class: takes raw, already-typed values and validates them. |
-| `parser_errors.py`  | The `MazeParserError` exception hierarchy, for failures that belong to the file rather than to the maze. |
-| `config_parser.py`  | The `MazeParsing` class: reads a configuration file, converts each value to its type, and builds a `MazeConfig`. |
+### Main classes
 
-The first two live inside the `mazegen` package, so a project that installs the
-package gets the validation without the file parsing. The other two stay at the
-root of the repository: they exist to serve `a_maze_ing.py` and are not part of
-the reusable module.
+- **`Cell`** represents one cell and stores its position, state, and walls.
+- **`MazeConfig`** stores and validates the generation parameters.
+- **`Maze`** generates, solves, and exports the maze.
 
-Dependencies point one way only: `config_parser` → `mazegen.config` →
-`mazegen.errors`, and `config_parser` → `parser_errors`.
+The package includes its own documentation so it remains usable independently
+of the main repository.
 
-- `MazeParsing.parse_config_from_file(path)` reads and parses a configuration
-  file and returns a validated `MazeConfig`. This is the entry point used by
-  `a_maze_ing.py`. `MazeParsing` holds no state and is never instantiated;
-  every method on it is a `staticmethod` or a `classmethod`, so the individual
-  steps can be called and tested on their own.
-- `MazeConfig(...)` can also be constructed directly from already-typed values,
-  in which case only validation runs. Its keyword arguments are `width`,
-  `height`, `entry`, `exit`, `perfect`, `braid`, `seed` and `output_file`;
-  `seed` and `braid` are the optional ones.
+## Parsing and validation
 
-Failures come from three places, which is why the caller catches four things:
+Configuration parsing and validation are divided between four modules:
 
-- `MazeParserError` subclasses, raised while reading the file: a line without
-  an `=`, an empty value, a missing mandatory key, an `ENTRY` or `EXIT` that is
-  not a pair, a flag that is not a boolean, or an `OUTPUT_FILE` pointing at the
-  configuration file.
-- `ValueError`, raised directly by `MazeParsing.parse_dimension` when `WIDTH`,
-  `HEIGHT`, `SEED` or a coordinate is not an integer. It belongs to neither
-  hierarchy.
-- `MazeConfigError` subclasses, raised by `MazeConfig` when the values are
-  well-formed but describe an impossible maze.
-- `OSError` from opening the file itself: missing file, no read permission,
-  a directory given instead of a file.
+| Module | Responsibility |
+| --- | --- |
+| `mazegen/errors.py` | Defines the `MazeConfigError` exception hierarchy |
+| `mazegen/config.py` | Defines `MazeConfig` and validates typed configuration values |
+| `parser_errors.py` | Defines errors relating to configuration-file syntax |
+| `config_parser.py` | Reads the file, converts its values, and creates a `MazeConfig` |
+
+`mazegen/errors.py` and `mazegen/config.py` are included in the reusable
+package. The file parser remains at the repository root because it belongs to
+the A-Maze-ing command-line program rather than the reusable generator.
+
+The dependencies point in one direction:
+
+```text
+config_parser -> mazegen.config -> mazegen.errors
+config_parser -> parser_errors
+```
+
+`MazeParsing.parse_config_from_file(path)` reads a configuration file and
+returns a validated `MazeConfig`.
+
+`MazeParsing` does not hold state and is not instantiated. Its parsing steps are
+implemented using static methods and class methods so they can be tested
+independently.
+
+A `MazeConfig` can also be created directly from values that have already been
+converted to the correct Python types.
+
+### Error handling
+
+Configuration failures can come from four sources:
+
+- `MazeParserError` subclasses for invalid configuration-file syntax.
+- `ValueError` when a dimension, seed, or coordinate is not an integer.
+- `MazeConfigError` subclasses when validly formatted values describe an
+  impossible maze.
+- `OSError` when the configuration file cannot be opened.
+
+Example:
 
 ```python
 from config_parser import MazeParsing
@@ -256,81 +481,112 @@ from parser_errors import MazeParserError
 
 try:
     maze_config = MazeParsing.parse_config_from_file("config.txt")
-except (MazeConfigError, MazeParserError, ValueError, OSError) as e:
-    print(f"Error: {e}")
+except (MazeConfigError, MazeParserError, ValueError, OSError) as error:
+    print(f"Error: {error}")
 ```
 
-Values are converted in a fixed order (`OUTPUT_FILE`, `PERFECT`, `BRAIDED`,
-`WIDTH`, `HEIGHT`, `SEED`, `ENTRY`, `EXIT`) and the first failure stops the
-parsing, so a file with several problems reports only the first one in that
-order.
+Values are converted in the following order:
 
-The specific conditions behind each exception are documented in the docstrings
-of the exception classes
-(`python3 -c "import parser_errors; help(parser_errors)"` and
-`python3 -c "import mazegen.errors; help(mazegen.errors)"`).
+1. `OUTPUT_FILE`
+2. `PERFECT`
+3. `BRAIDED`
+4. `WIDTH`
+5. `HEIGHT`
+6. `SEED`
+7. `ENTRY`
+8. `EXIT`
+
+Parsing stops when the first error is found.
+
+The exception classes contain further documentation in their docstrings:
+
+```bash
+python3 -c "import parser_errors; help(parser_errors)"
+python3 -c "import mazegen.errors; help(mazegen.errors)"
+```
 
 ## Team and project management
 
 ### Roles
 
-- **dmgeorgi**: configuration parsing and validation (`config_parser.py`,
-  `parser_errors.py`, `mazegen/config.py`, `mazegen/errors.py`).
-- **dqureshi**: `<generator / display / packaging>`.
+- **dmgeorgi:** configuration parsing and validation, including
+  `config_parser.py`, `parser_errors.py`, `mazegen/config.py`, and
+  `mazegen/errors.py`.
+- **dqureshi:** maze generation, graphical visualization, and packaging of the
+  reusable `mazegen` module.
 
 ### Planning and how it evolved
 
-Personal note: dmgeorgi is new to python, or at least new to learning about it
-in a structured way. So, before tackling A-maze-ing, he completed and submitted py0-py4.
-The concepts he learned in those were classes, inheritance, exceptions and error handling and context
-managers, which he has used in his work.
+dmgeorgi was new to learning Python in a structured way. Before starting
+A-Maze-ing, he completed and submitted Python modules 0 through 4.
 
-However, he did not look into py5-py10 before or during the project.
-This was partly due to time constraints, and wanting to get through
-A-Maze-ing with his partner before either were black-holed.
-However, it was also partly a conscious choice, since dmgeorgi has a tendency
-to get stuck in tutorial hell; He wanted to make sure that he tackled real problems
-using the concepts he learned before learnng new concepts.
+These modules introduced classes, inheritance, exceptions, error handling, and
+context managers. The project provided an opportunity to apply those concepts
+to a larger program.
 
-He does not regret this choice but during the project he did a
-lot of post-mortems with Claude and found that there were definitely ways he
-could've done less work had he known more. One example of this was learning about pydantic
-after reviewing dqureshi's work, and finding that it could've saved him a lot of time
-when he was writing the validation section. Oh, well.
+He did not study modules 5 through 10 before or during the project. This was
+partly due to time constraints and partly a conscious choice to avoid getting
+stuck in tutorial material without applying the concepts already learned.
 
-### What worked and what could be improved
+During the project, the team reviewed the implementation and found places where
+knowledge of additional Python libraries could have reduced the amount of code.
+For example, discovering Pydantic later showed that some parts of configuration
+validation could have been implemented differently.
 
-`<...>`
+### What worked well
+
+- Dividing the project into generation, parsing, validation, visualization, and
+  packaging responsibilities allowed the team members to work independently.
+- Separating `MazeConfig` validation from file parsing made the reusable package
+  independent of the main program.
+- Starting from a connected perfect maze made it possible to support perfect,
+  imperfect, and braided generation modes.
+- Keeping MiniLibX inside a virtual environment made its installation
+  reproducible without modifying the system Python installation.
+
+### What could be improved
+
+- Some design decisions were made before the complete interaction between the
+  generator, parser, and visualizer was known.
+- More integration tests could have been written earlier.
+- Earlier research into Python packaging and validation libraries could have
+  reduced repeated work.
 
 ### Tools
 
-`<...>`
+- Python virtual environments for dependency isolation.
+- MiniLibX for the graphical visualizer.
+- `pytest` or `unittest` for testing.
+- `flake8` for style checking.
+- `mypy` for static type checking.
+- Python's `build` package for producing the reusable distribution files.
+- Git for version control and team collaboration.
 
 ## Resources
 
-- PEP 8, PEP 257, PEP 484 (style, docstrings, type hints).
-- Python documentation for `random`, `argparse`, and packaging
-  (`https://packaging.python.org`).
+- [Python documentation](https://docs.python.org/3/)
+- [PEP 8 — Style Guide for Python Code](https://peps.python.org/pep-0008/)
+- [PEP 257 — Docstring Conventions](https://peps.python.org/pep-0257/)
+- [PEP 484 — Type Hints](https://peps.python.org/pep-0484/)
+- [Python Packaging User Guide](https://packaging.python.org/)
+- [MiniLibX Python Manual](https://github.com/noradefitero/42_MiniLibX_Python_Manual)
+- [Official MiniLibX repository](https://github.com/42school/mlx_CLXV)
 
 ### How AI was used
 
-`<...>`
+AI assistants were used to support review and discussion rather than to replace
+understanding of the implementation.
 
-So, for the visualiser we need a virtual environment but the setup is simple.
-Here's what I did to make it work on my machine (I have included only the most necessary steps).
+They were used to:
 
-Run all these commands from root (maze-runners):
+- Suggest tests and edge cases for configuration parsing.
+- Review MiniLibX image-buffer and callback handling.
+- Discuss how to separate drawing, maze rendering, and window management.
+- Review and improve project documentation.
+- Suggest colour values and colour combinations for the visualizer.
 
-1) mkdir vis (create a vis folder - where visualisation lives)
-2) download mlx-2.2.tgz off intra project page
-3) copy mlx-2.2.tgz from downloads to maze-runners/vis
-4) tar -xvf vis/mlx-2.2.tgz (unzip the folder - you will see src and fedora folder, do not touch those)
-5) python3 -m venv .venv (create the virtual environment)
-6) source .venv/bin/activate (activate the virtual environment)
-7) pip install vis/ubuntu/mlx-2.2-py3-none-any.whl
-8) Confirm success with python -c "from mlx import Mlx; print(Mlx().mlx_init())"
+AI was used to generate initial colour combinations for the visualizer.
+The suggestions were reviewed and adapted before being included in the project.
 
-I need to talk with Dan about what stuff we keep in vis and whether we include the .venv, 
-since the mlx stuff doesn't work without the venv
-
-Ok so I am not an artist so I asked Claude do generate colours and colour combinations for me
+All AI-generated suggestions were checked against the subject, tested where
+appropriate, and reviewed by the team before use.

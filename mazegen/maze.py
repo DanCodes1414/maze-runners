@@ -4,7 +4,9 @@ from .generator import MazeGenerator
 from .solver import MazeSolver
 from .config import MazeConfig
 
+
 class Maze(BaseModel):
+
     """
     Represents a maze with a grid of cells, start and end positions, and the generated path.
 
@@ -78,7 +80,8 @@ class Maze(BaseModel):
                 if (dr, dc) == (dir_r, dir_c):
                     direction = dir_key
                     break
-            shortest_path += direction
+            if direction is not None:
+                shortest_path += direction
 
         try:
             with open(self.config.output_file, 'w') as f:

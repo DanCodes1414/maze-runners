@@ -11,7 +11,7 @@ The module was packaged from the root directory using:
 ## Instructions
 To import this module into your own project, follow these steps:
 1. Copy the tar.gz or whl file into your project directory. Let's say your project directory is `my-project`.
-2. Inside the `my-project` directory, run ```pip install file_name.tar.gz``` or ```pip install file_name.whl```
+2. Inside the `my-project` directory, run ```pip install file_name.tar.gz``` or ```pip install file_name.whl```.
 3. You can now use the module in your project!
 
 ---

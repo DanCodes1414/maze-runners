@@ -293,7 +293,7 @@ class MazeParsing:
             seed = None
         entry_point = cls.parse_point(kv_dictionary, "ENTRY")
         exit_point = cls.parse_point(kv_dictionary, "EXIT")
-        return MazeConfig(
+        maze_config = MazeConfig(
             width=width,
             height=height,
             entry=entry_point,
@@ -303,3 +303,5 @@ class MazeParsing:
             seed=seed,
             output_file=output_filename
         )
+        maze_config.validation_rules()
+        return maze_config

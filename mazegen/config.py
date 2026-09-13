@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field, model_validator
 from typing import Self
 from .errors import (
-    OutputFilenameError, PointError, ContradictionError, InvalidDimensionError, MazeTooSmallError, MazeTooBigError, BlockedCellsError, PointOutOfBoundsError)
+    OutputFilenameError, PointError, ContradictionError, InvalidDimensionError,
+    MazeTooSmallError, MazeTooBigError, BlockedCellsError, PointOutOfBoundsError)
 from .cell import get_blocked_cells
 
 
@@ -28,33 +29,6 @@ class MazeConfig(BaseModel):
     braid: bool = Field(default=False)
     output_file: str
 
-    # @model_validator(mode="after")
-    # def validation_rules(self) -> Self:
-    #     """Validate the given parameters.
-
-    #     output_filename is stored as given. width and height are checked
-    #     with validate_maze, entry and exit coords with
-    #     validate_point, and seed (when not None) with validate_dimension;
-    #     any error those raise is propagated.
-
-    #     Raise OutputFilenameError if output filename contains paths.
-    #     Raise PointError if entry and exit coords are equal.
-    #     Raise ContradictionError if perfect and braid flags are both True.
-    #     """
-    #     if '/' in self.output_file:
-    #         raise OutputFilenameError("OUTPUT_FILE does not accept paths.")
-    #     self.width, self.height = MazeConfig.validate_maze(self.width, self.height, self.perfect)
-    #     maze_dimensions = (self.width, self.height)
-    #     self.entry = MazeConfig.validate_point("ENTRY", self.entry, maze_dimensions)
-    #     self.exit = MazeConfig.validate_point("EXIT", self.exit, maze_dimensions)
-    #     if (self.entry == self.exit):
-    #         raise PointError()
-    #     if self.braid and self.perfect:
-    #         raise ContradictionError()
-    #     if self.seed is not None:
-    #         MazeConfig.validate_dimension(self.seed, "SEED")
-    #     return self
-
     @model_validator(mode="after")
     def validation_rules(self) -> Self:
         """Validate the given parameters.
@@ -74,7 +48,6 @@ class MazeConfig(BaseModel):
         maze_dimensions = (self.width, self.height)
         self.entry = MazeConfig.validate_point("ENTRY", self.entry, maze_dimensions)
         self.exit = MazeConfig.validate_point("EXIT", self.exit, maze_dimensions)
-        print("we got yuy")
         if (self.entry == self.exit):
             raise PointError()
         if self.braid and self.perfect:
@@ -93,35 +66,6 @@ class MazeConfig(BaseModel):
         if dimension_value < 0:
             raise InvalidDimensionError(dimension_value, dimension_name)
         return dimension_value
-
-    # @staticmethod
-    # def validate_maze(width: int, height: int,
-    #                   perfect_flag: bool) -> tuple[int, int]:
-    #     """Return (width, height) if the maze is large enough.
-
-    #     The minimum depends on perfect_flag. A perfect maze needs both
-    #     dimensions to be at least 1 and an area of at least 2. An
-    #     imperfect maze needs both dimensions to be at least 2 and an
-    #     area of at least 6, the smallest board that can hold two
-    #     independent loops.
-
-    #     Raise MazeTooSmallError if either requirement is not met.
-    #     """
-    #     if perfect_flag:
-    #         if width < 1:
-    #             raise MazeTooSmallError("width", 1, "perfect")
-    #         if height < 1:
-    #             raise MazeTooSmallError("height", 1, "perfect")
-    #         if width * height < 2:
-    #             raise MazeTooSmallError("area", 2, "perfect")
-    #     else:
-    #         if width < 2:
-    #             raise MazeTooSmallError("width", 2, "imperfect")
-    #         if height < 2:
-    #             raise MazeTooSmallError("height", 2, "imperfect")
-    #         if width * height < 6:
-    #             raise MazeTooSmallError("area", 6, "imperfect")
-    #     return (width, height)
 
     @staticmethod
     def validate_maze(width: int, height: int) -> tuple[int, int]:
@@ -146,7 +90,7 @@ class MazeConfig(BaseModel):
         if width > max_width:
             raise MazeTooBigError("width", max_width)
         if height > max_height:
-            raise MazeTooBigError("height", max_height)        
+            raise MazeTooBigError("height", max_height)
         return (width, height)
 
     @staticmethod
@@ -174,7 +118,5 @@ class MazeConfig(BaseModel):
         point_coords = (point_coords[1], point_coords[0])
         blocked_cells = get_blocked_cells(maze_dimensions[1], maze_dimensions[0])
         if point_coords in blocked_cells:
-            # print(f"{point_coords}")
-            # print(f"{blocked_cells}")
             raise BlockedCellsError(point_name)
         return point_coords

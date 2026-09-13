@@ -8,7 +8,6 @@ from parser_errors import MazeParserError
 import sys
 
 
-
 def main() -> int:
     if len(sys.argv) != 2:
         print("Error: wrong number of args.\n"
@@ -23,12 +22,11 @@ def main() -> int:
     except Exception as e:
         print(f"Unexpected Error in Parsing and Validation: {e}", file=sys.stderr)
         return 1
-    else:
-        maze = Maze(config=maze_config)
-        maze.generate()
-        renderer = MazeRender((maze_config.width, maze_config.height), maze)
-        #maze.export()
-        renderer.run_window()
+    maze = Maze(config=maze_config)
+    maze.generate()
+    renderer = MazeRender(maze_config, maze)
+    maze.export()
+    renderer.run_window()
     return 0
 
 
