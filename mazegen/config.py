@@ -29,6 +29,33 @@ class MazeConfig(BaseModel):
     braid: bool = Field(default=False)
     output_file: str
 
+    # @model_validator(mode="after")
+    # def validation_rules(self) -> Self:
+    #     """Validate the given parameters.
+
+    #     output_filename is stored as given. width and height are checked
+    #     with validate_maze, entry and exit coords with
+    #     validate_point, and seed (when not None) with validate_dimension;
+    #     any error those raise is propagated.
+
+    #     Raise OutputFilenameError if output filename contains paths.
+    #     Raise PointError if entry and exit coords are equal.
+    #     Raise ContradictionError if perfect and braid flags are both True.
+    #     """
+    #     if '/' in self.output_file:
+    #         raise OutputFilenameError("OUTPUT_FILE does not accept paths.")
+    #     self.width, self.height = MazeConfig.validate_maze(self.width, self.height, self.perfect)
+    #     maze_dimensions = (self.width, self.height)
+    #     self.entry = MazeConfig.validate_point("ENTRY", self.entry, maze_dimensions)
+    #     self.exit = MazeConfig.validate_point("EXIT", self.exit, maze_dimensions)
+    #     if (self.entry == self.exit):
+    #         raise PointError()
+    #     if self.braid and self.perfect:
+    #         raise ContradictionError()
+    #     if self.seed is not None:
+    #         MazeConfig.validate_dimension(self.seed, "SEED")
+    #     return self
+
     @model_validator(mode="after")
     def validation_rules(self) -> Self:
         """Validate the given parameters.
@@ -44,7 +71,7 @@ class MazeConfig(BaseModel):
         """
         if '/' in self.output_file:
             raise OutputFilenameError("OUTPUT_FILE does not accept paths.")
-        self.width, self.height = MazeConfig.validate_maze(self.width, self.height, self.perfect)
+        self.width, self.height = MazeConfig.validate_maze(self.width, self.height)
         maze_dimensions = (self.width, self.height)
         self.entry = MazeConfig.validate_point("ENTRY", self.entry, maze_dimensions)
         self.exit = MazeConfig.validate_point("EXIT", self.exit, maze_dimensions)
@@ -55,7 +82,6 @@ class MazeConfig(BaseModel):
         if self.seed is not None:
             MazeConfig.validate_dimension(self.seed, "SEED")
         return self
-
 
     @staticmethod
     def validate_dimension(dimension_value: int, dimension_name: str) -> int:
@@ -68,9 +94,37 @@ class MazeConfig(BaseModel):
             raise InvalidDimensionError(dimension_value, dimension_name)
         return dimension_value
 
+    # @staticmethod
+    # def validate_maze(width: int, height: int,
+    #                   perfect_flag: bool) -> tuple[int, int]:
+    #     """Return (width, height) if the maze is large enough.
+
+    #     The minimum depends on perfect_flag. A perfect maze needs both
+    #     dimensions to be at least 1 and an area of at least 2. An
+    #     imperfect maze needs both dimensions to be at least 2 and an
+    #     area of at least 6, the smallest board that can hold two
+    #     independent loops.
+
+    #     Raise MazeTooSmallError if either requirement is not met.
+    #     """
+    #     if perfect_flag:
+    #         if width < 1:
+    #             raise MazeTooSmallError("width", 1, "perfect")
+    #         if height < 1:
+    #             raise MazeTooSmallError("height", 1, "perfect")
+    #         if width * height < 2:
+    #             raise MazeTooSmallError("area", 2, "perfect")
+    #     else:
+    #         if width < 2:
+    #             raise MazeTooSmallError("width", 2, "imperfect")
+    #         if height < 2:
+    #             raise MazeTooSmallError("height", 2, "imperfect")
+    #         if width * height < 6:
+    #             raise MazeTooSmallError("area", 6, "imperfect")
+    #     return (width, height)
+
     @staticmethod
-    def validate_maze(width: int, height: int,
-                      perfect_flag: bool) -> tuple[int, int]:
+    def validate_maze(width: int, height: int) -> tuple[int, int]:
         """Return (width, height) if the maze is large enough.
 
         The minimum depends on perfect_flag. A perfect maze needs both
@@ -81,20 +135,12 @@ class MazeConfig(BaseModel):
 
         Raise MazeTooSmallError if either requirement is not met.
         """
-        if perfect_flag:
-            if width < 1:
-                raise MazeTooSmallError("width", 1, "perfect")
-            if height < 1:
-                raise MazeTooSmallError("height", 1, "perfect")
-            if width * height < 2:
-                raise MazeTooSmallError("area", 2, "perfect")
-        else:
-            if width < 2:
-                raise MazeTooSmallError("width", 2, "imperfect")
-            if height < 2:
-                raise MazeTooSmallError("height", 2, "imperfect")
-            if width * height < 6:
-                raise MazeTooSmallError("area", 6, "imperfect")
+        min_width = 4
+        min_height = 4
+        if width < min_width:
+            raise MazeTooSmallError("width", min_width)
+        if height < min_height:
+            raise MazeTooSmallError("height", min_height)
         return (width, height)
 
     @staticmethod

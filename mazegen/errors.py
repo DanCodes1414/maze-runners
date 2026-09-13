@@ -32,14 +32,21 @@ class PointError(MazeConfigError):
         super().__init__("Entry and exit points cannot be the same.")
 
 
+# class MazeTooSmallError(MazeConfigError):
+#     """Raise when the maze dimensions are below the minimum allowed size."""
+#     def __init__(self, maze_dimension: str, num: int, maze_type: str) -> None:
+#         super().__init__(
+#             f"The {maze_dimension} of the maze is too small. "
+#             f"{maze_dimension.capitalize()} must be at least {num} in a {maze_type} maze."
+#         )
+
 class MazeTooSmallError(MazeConfigError):
     """Raise when the maze dimensions are below the minimum allowed size."""
-    def __init__(self, maze_dimension: str, num: int, maze_type: str) -> None:
+    def __init__(self, maze_dimension: str, num: int) -> None:
         super().__init__(
             f"The {maze_dimension} of the maze is too small. "
-            f"{maze_dimension.capitalize()} must be at least {num} in a {maze_type} maze."
+            f"{maze_dimension.capitalize()} must be at least {num}."
         )
-
 
 class ContradictionError(MazeConfigError):
     """Raise when both the BRAID and PERFECT flags are set.
