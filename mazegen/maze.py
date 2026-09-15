@@ -41,7 +41,7 @@ class Maze(BaseModel):
         if not self.generated:
             raise RuntimeError("Maze grid is not generated. Call generate() before solving.")
         try:
-            solver = MazeSolver(self.config)
+            solver = MazeSolver(self.grid, self.config)
             self.path = solver.solve()
         except Exception as e:
             print(f"Unexpected error in Solve: {e}")

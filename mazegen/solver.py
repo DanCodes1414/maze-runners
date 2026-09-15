@@ -10,9 +10,8 @@ class MazeSolver:
         config (MazeConfig): The configuration for generating the maze.
         grid (list[list[AutomatonCell]]): A 2D list representing the maze grid with AutomatonCell objects.
     """
-    def __init__(self, config: MazeConfig):
+    def __init__(self, grid: list[list['Cell']], config: MazeConfig):
         self.config = config
-        self.grid: list[list['Cell']] = []
 
     def solve(self) -> list[tuple[int, int]]:
         """
