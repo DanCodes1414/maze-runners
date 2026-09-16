@@ -71,12 +71,17 @@ class MazeSolver:
                     self.bfs_grid[neighbour_row][neighbour_col].visited = True
                     self.bfs_grid[neighbour_row][neighbour_col].parent_cell = self.bfs_grid[point[0]][point[1]]
 
-    def reverse_path(self, cell: BreadCell, entry_point: tuple[int, int], exit_point: tuple[int, int]) -> list[tuple[int, int]]:
-        shortest_path = []
+    def reverse_path(self, cell: 'BreadCell' | None, entry_point: tuple[int, int], exit_point: tuple[int, int]) -> list[tuple[int, int]]:
+        shortest_path: list[tuple[int, int]] = []
+        if cell is None:
+            return shortest_path
         point = (cell.row, cell.col)
         shortest_path.append(point)
         while point != entry_point:
-            cell = cell.parent_cell
+            parent = cell.parent_cell
+            if parent is None:
+                raise ValueError("Could not trace a path back to the maze entry")
+            cell = parent
             point = (cell.row, cell.col)
             shortest_path.append(point)
         shortest_path.reverse() 

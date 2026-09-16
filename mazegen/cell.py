@@ -14,7 +14,7 @@ class CellState(Enum):
     FREE = 0
     SEED = 1
     INVITE = 2
-    CONNECTED = 3,
+    CONNECTED = 3
     BLOCKED = 4
 
 
@@ -59,7 +59,7 @@ class AutomatonCell(Cell, BaseModel):
 
 class BreadCell(Cell, BaseModel):
     visited: bool = Field(default=False)
-    parent_cell: 'BreadCell' = Field(default=None)
+    parent_cell: 'BreadCell' | None = Field(default=None)
 
 
 def get_blocked_cells(rows: int, cols: int) -> set[tuple[int, int]]:
