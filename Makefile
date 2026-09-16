@@ -1,10 +1,24 @@
 NAME = a_maze_ing.py
 CONFIG = config.txt
+VENV_FOLDER = .venv
+SHELL := /bin/bash
 
-install:
-	
-	python3 -m pip install -U flake8 mypy
+install: check-venv check-pip
+	python -m pip install vis_src/ubuntu/mlx-2.2-py3-none-any.whl && \
+	python3 -m pip install -U flake8 mypy && \
 	python3 -m pip install -r requirements.txt
+
+install-mac: check-venv check-pip
+	python -m pip install vis_src/mlx_CLXV/mlx-2.4-py3-none-any.whl && \
+	python3 -m pip install -U flake8 mypy && \
+	python3 -m pip install -r requirements.txt
+
+check-venv:
+	@command -v python3 >/dev/null || { echo "Error: Python 3 is not installed."; exit 1; }
+	@ [ -d "$(VENV_FOLDER)" ] || { echo "Error: Virtual environment not found."; exit 1; }
+
+check-pip:
+	@command -v pip >/dev/null || { echo "Error: pip is not installed."; exit 1; }
 
 run:
 	python3 $(NAME) $(CONFIG)
@@ -25,4 +39,4 @@ clean:
 	rm -rf mazegen/__pycache__ mazegen/.mypy_cache
 	find . -type f -name "*.txt" -not -name "config.txt" -not -name "requirements.txt" -delete
 
-.PHONY: install run debug lint lint-strict clean
+.PHONY: install run debug lint lint-strict clean check-pip check-venv

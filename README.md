@@ -100,6 +100,30 @@ source .venv/bin/activate
 The `.venv` directory is machine-specific and must not be submitted. It should
 be included in `.gitignore`.
 
+### MiniLibX Set-up on Mac
+
+MiniLibX must be run on a UTM virtual machine. Follow these steps only if running on a MacOS:
+
+1. Download UTM: https://mac.getutm.app/
+2. Open UTM and create a new `Virtualise -> Linux` VM with the Debian iso (https://cdimage.debian.org/debian-cd/current/arm64/iso-cd/) and 25GB drive size
+3. Run `Graphical Install`
+4. Don't create a root user account
+5. Create a user account with your intra name as the username and choose a short simple password
+6. Choose the first Guided partition option
+7. Add the Debian Desktop env and GNOME packages to be installed
+8. Once installed, press continue and then close the page
+9. On the main UTM page, stop the VM, clear the iso image for the VM, and then start the VM again
+10. Login with the account password set earlier
+11. Open the terminal inside the VM and run `ssh-keygen -t ed25519 -C "YOUR_EMAIL"`
+12. Run `cat .ssh/id_ed25519.pub` and copy the value (Shift -> Control -> C)
+13. Paste the value in intra SSH settings (https://profile.intra.42.fr/gitlab_users)
+14. Run `sudo apt install libxcb1-dev libxcb-keysyms1-dev libvulkan-dev zlib1g-dev libbsd-dev glslc pip clang git`
+15. Now clone the repo: `git clone REPO_NAME a_maze_ing && cd a_maze_ing`
+16. Run `python3 -m venv .venv && source .venv/bin/activate`
+17. Run `git clone https://github.com/42school/mlx_CLXV.git && cd mlx_CLXV && ./configure.sh && make && cd ..`
+18. Run `make install-mac` and finally `make run`
+
+
 ### Running the program
 
 Run the program from the root of the repository:
