@@ -4,12 +4,12 @@ VENV_FOLDER = .venv
 SHELL := /bin/bash
 
 install: check-venv check-pip
-	python -m pip install vis_src/ubuntu/mlx-2.2-py3-none-any.whl && \
+	python3 -m pip install vis_src/ubuntu/mlx-2.2-py3-none-any.whl && \
 	python3 -m pip install -U flake8 mypy && \
 	python3 -m pip install -r requirements.txt
 
 install-mac: check-venv check-pip
-	python -m pip install vis_src/src/mlx_CLXV-2.2.tgz && \
+	python3 -m pip install vis_src/mlx_CLXV/mlx-2.2-py3-none-any.whl && \
 	python3 -m pip install -U flake8 mypy && \
 	python3 -m pip install -r requirements.txt
 
