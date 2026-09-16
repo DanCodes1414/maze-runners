@@ -1,0 +1,16 @@
+LICENSE.md
+README.md
+setup.py
+mazegen/__init__.py
+mazegen/cell.py
+mazegen/colours.py
+mazegen/config.py
+mazegen/errors.py
+mazegen/generator.py
+mazegen/maze.py
+mazegen/solver.py
+mazegen.egg-info/PKG-INFO
+mazegen.egg-info/SOURCES.txt
+mazegen.egg-info/dependency_links.txt
+mazegen.egg-info/requires.txt
+mazegen.egg-info/top_level.txt
