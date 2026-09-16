@@ -5,4 +5,3 @@ BRAID=True
 EXIT=0, 1
 OUTPUT_FILE=maze.txt
 ENTRY=1, 0
-

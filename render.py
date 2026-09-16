@@ -10,7 +10,7 @@ Pressing Ctrl-Z suspends the process instead of closing it. A suspended process
 can be resumed from the terminal using the ``fg`` command.
 """
 import random
-from mlx import Mlx
+from mlx import Mlx  # type: ignore[import-untyped]
 from mazegen.colours import ColourPair, COLOUR_PAIRS
 from mazegen.maze import Maze
 from mazegen.config import MazeConfig
@@ -60,6 +60,9 @@ class Canvas:
 
 
 class MazePainter:
+    ENTRY_COLOUR = (60, 170, 20, 255)
+    EXIT_COLOUR = (40, 40, 230, 255)
+    SOLUTION_COLOUR = (230, 70, 20, 255)
     """Draw a maze and manage its visual properties."""
 
     def __init__(self, config: MazeConfig) -> None:
@@ -115,12 +118,10 @@ class MazePainter:
         if walls == 15:
             blocked_cells_constant = 2 / 3
             r, g, b, a = self.colour_pair.path
-            path_colour = (
-                int(r * blocked_cells_constant),
-                int(g * blocked_cells_constant),
-                int(b * blocked_cells_constant),
-                a,
-            )
+            scaled_r = int(r * blocked_cells_constant)
+            scaled_g = int(g * blocked_cells_constant)
+            scaled_b = int(b * blocked_cells_constant)
+            path_colour = (scaled_r, scaled_g, scaled_b, a)
         else:
             path_colour = self.colour_pair.path
 
@@ -135,6 +136,44 @@ class MazePainter:
         if walls & 8:
             canvas.fill_rect(tlx, tly, w, cell_h, wall_colour)
 
+    def draw_endpoints(self, maze: Maze, canvas: Canvas) -> None:
+        """Colour the entry and exit cell interiors."""
+        cell_size = self.cell_thick + 2 * self.wall_thick
+
+        endpoints = (
+            (maze.config.entry, self.ENTRY_COLOUR),
+            (maze.config.exit, self.EXIT_COLOUR),
+        )
+
+        for (row, col), colour in endpoints:
+            x = 2 * self.wall_thick + col * cell_size
+            y = 2 * self.wall_thick + row * cell_size
+
+            canvas.fill_rect(x, y, self.cell_thick, self.cell_thick, colour)
+
+    def draw_path(self, path: list[tuple[int, int]], canvas: Canvas) -> None:
+        """Connect the centres of adjacent path cells, supplied as (x, y)."""
+        if not path:
+            return
+
+        cell_size = self.cell_thick + 2 * self.wall_thick
+        thickness = max(1, self.cell_thick // 3)
+        half = thickness // 2
+        colour = self.SOLUTION_COLOUR
+
+        previous: tuple[int, int] | None = None
+        for row, col in path:
+            cx = self.wall_thick + col * cell_size + cell_size // 2
+            cy = self.wall_thick + row * cell_size + cell_size // 2
+            if previous is None:
+                canvas.fill_rect(cx - half, cy - half,
+                                 thickness, thickness, colour)
+            else:
+                px, py = previous
+                canvas.fill_rect(min(px, cx) - half, min(py, cy) - half, abs(cx - px) + thickness,
+                                 abs(cy - py) + thickness, colour)
+            previous = (cx, cy)
+
     def draw_maze(self, maze: Maze, canvas: Canvas) -> None:
         """Draw every cell in a maze.
 
@@ -148,15 +187,8 @@ class MazePainter:
 
         for y in range(self.height_in_cells):
             for x in range(self.width_in_cells):
-                top_left = (
-                    self.wall_thick + x * cell_size,
-                    self.wall_thick + y * cell_size,
-                )
-                bottom_right = (
-                    self.wall_thick + (x + 1) * cell_size,
-                    self.wall_thick + (y + 1) * cell_size,
-                )
-
+                top_left = (self.wall_thick + x * cell_size, self.wall_thick + y * cell_size)
+                bottom_right = (self.wall_thick + (x + 1) * cell_size, self.wall_thick + (y + 1) * cell_size)
                 self.draw_cell(top_left, bottom_right, maze.grid[y][x].walls, canvas)
 
 
@@ -208,13 +240,20 @@ class MazeRender:
         if keynum == self.EXIT_KEY:
             self.m.mlx_loop_exit(self.mlx_ptr)
         elif keynum == self.REGEN_KEY:
+            self.generator.path.clear()
             self.generator.generate()
+            self.generator.solve()
             self.refresh()
         elif keynum == self.PATH_KEY:
-            ...
+            self.toggle_path()
         elif keynum == self.COLOUR_KEY:
             self.painter.change_colour_pair()
             self.refresh()
+
+    def toggle_path(self) -> None:
+        """Show or hide the stored solution and redraw the window."""
+        self.generator.show_path = not self.generator.show_path
+        self.refresh()
 
     def draw_menu(self) -> None:
         """Draw the visualizer controls below the maze."""
@@ -222,17 +261,27 @@ class MazeRender:
         self.m.mlx_string_put(self.mlx_ptr, self.win_ptr, 0, self.painter.maze_height_in_pixels, 0xFFFFFF, text_string)
 
     def refresh(self) -> None:
-        """Redraw the maze and menu in the window."""
+        """Redraw the maze, optional solution, endpoints, and menu."""
         if self.canvas is None:
             raise RuntimeError("Cannot refresh before the canvas is initialized.")
+
         self.painter.draw_maze(self.generator, self.canvas)
-        self.m.mlx_put_image_to_window(self.mlx_ptr, self.win_ptr, self.img_ptr, 0, 0)
+
+        if self.generator.show_path:
+            self.painter.draw_path(self.generator.path, self.canvas)
+
+        self.painter.draw_endpoints(self.generator, self.canvas)
+
+        self.m.mlx_put_image_to_window(
+            self.mlx_ptr, self.win_ptr, self.img_ptr, 0, 0
+        )
         self.draw_menu()
 
     def run_window(self) -> None:
         """Create the MLX window and run its event loop."""
         text_height = 25
-        win_width = self.painter.maze_width_in_pixels
+        menu_min_width = 375
+        win_width = max(self.painter.maze_width_in_pixels, menu_min_width)
         win_height = self.painter.maze_height_in_pixels + text_height
 
         self.mlx_ptr = self.m.mlx_init()
@@ -248,6 +297,7 @@ class MazeRender:
         line_len_in_pix = mem[2] // bytes_per_pixel
 
         self.canvas = Canvas(image_in_bytes, line_len_in_pix, bytes_per_pixel)
+        self.canvas.fill_rect(0, 0, win_width, win_height, (0, 0, 0, 255))
         self.refresh()
         self.m.mlx_hook(self.win_ptr, self.CLOSE_BUTTON, 0, self.myclose, None)
         self.m.mlx_key_hook(self.win_ptr, self.mykey, None)

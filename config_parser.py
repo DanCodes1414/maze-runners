@@ -303,5 +303,5 @@ class MazeParsing:
             seed=seed,
             output_file=output_filename
         )
-        maze_config.validation_rules()
+        maze_config.validation_rules()  # type: ignore[operator]
         return maze_config

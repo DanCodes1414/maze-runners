@@ -20,7 +20,7 @@ class Maze(BaseModel):
     config: MazeConfig
     show_path: bool = Field(default=False)
     grid: list[list['Cell']] = Field(default_factory=list[list['Cell']])
-    path: list[tuple[int, int]] = Field(default_factory=list) # TODO: Perhaps change to this -> path: list[str] = Field(default_factory=list)
+    path: list[tuple[int, int]] = Field(default_factory=list)
     generated: bool = Field(default=False, exclude=True)
 
     def generate(self) -> None:
@@ -41,7 +41,7 @@ class Maze(BaseModel):
         if not self.generated:
             raise RuntimeError("Maze grid is not generated. Call generate() before solving.")
         try:
-            solver = MazeSolver(self.config)
+            solver = MazeSolver(self.grid, self.config)
             self.path = solver.solve()
         except Exception as e:
             print(f"Unexpected error in Solve: {e}")
