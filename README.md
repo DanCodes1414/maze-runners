@@ -210,10 +210,8 @@ is not. Because inline comments are not supported, the value is interpreted as
 
 ### Validity rules
 
-- A perfect maze requires both dimensions to be at least 1 and its total area
-  to be at least 2.
-- An imperfect maze requires both dimensions to be at least 2 and its total
-  area to be at least 6.
+- The mininmum height and width of the maze is 4, because anything 
+smaller is no fun to play in PacMan project.
 - `ENTRY` and `EXIT` must be inside the maze.
 - `ENTRY` and `EXIT` must refer to different cells.
 - `OUTPUT_FILE` may not contain `/`.
@@ -529,14 +527,23 @@ python3 -c "import parser_errors; help(parser_errors)"
 python3 -c "import mazegen.errors; help(mazegen.errors)"
 ```
 
+## Solver
+dmgeorgi implemented the solver using breadth-first search (BFS). Starting at
+the configured entry point, it explores reachable cells level by level with a
+queue, following only passages that are not blocked by walls. Because BFS visits
+cells in order of their distance from the entry, the first route it finds to the
+exit is a shortest path.
+
+As each cell is discovered, the solver records the cell it came from. Once the
+exit is reached, it follows these parent links back to the entry and reverses the
+result to return the path in entry-to-exit order.
+
 ## Team and project management
 
 ### Roles
 
-- **dmgeorgi:** configuration parsing and validation, including
-  `config_parser.py`, `parser_errors.py`, `mazegen/config.py`, and
-  `mazegen/errors.py`.
-- **dqureshi:** maze generation, graphical visualization, and packaging of the
+- **dmgeorgi:** configuration parsing and validation, graphical visualization, and maze solver.
+- **dqureshi:** maze generation, and packaging of the
   reusable `mazegen` module.
 
 ### Planning and how it evolved
