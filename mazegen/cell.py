@@ -18,26 +18,6 @@ class CellState(Enum):
     BLOCKED = 4
 
 
-class AutomatonCell(BaseModel):
-    """
-    Represents a cell in the maze grid for the Cell Automaton algorithm.
-
-    Attributes:
-        row (int): The row index of the cell in the grid.
-        col (int): The column index of the cell in the grid.
-        state (CellState): The current state of the cell.
-        walls (int): A bitmask representing the walls of the cell (4 bits for walls: N=1, E=2, S=4, W=8).
-        parent (str): The direction of the parent cell (N, E, S, W) if the cell is connected.
-        free_neighbours (list[str]): A list of directions (N, E, S, W) representing the free neighbouring cells.
-    """
-    row: int
-    col: int
-    state: CellState = Field(default=CellState.FREE)
-    walls: int = Field(default=15, ge=0, le=15)
-    parent: str = Field(default="")
-    free_neighbours: list[str] = Field(default_factory=list)
-
-
 class Cell(BaseModel):
     """
     Represents a cell in the maze grid.
@@ -58,6 +38,28 @@ class Cell(BaseModel):
     def hex_representation(self) -> str:
         """Returns the hexadecimal representation of the cell's walls."""
         return format(self.walls, 'x')
+
+
+class AutomatonCell(Cell, BaseModel):
+    """
+    Represents a cell in the maze grid for the Cell Automaton algorithm.
+
+    Attributes:
+        row (int): The row index of the cell in the grid.
+        col (int): The column index of the cell in the grid.
+        state (CellState): The current state of the cell.
+        walls (int): A bitmask representing the walls of the cell (4 bits for walls: N=1, E=2, S=4, W=8).
+        parent (str): The direction of the parent cell (N, E, S, W) if the cell is connected.
+        free_neighbours (list[str]): A list of directions (N, E, S, W) representing the free neighbouring cells.
+    """
+    state: CellState = Field(default=CellState.FREE)
+    parent: str = Field(default="")
+    free_neighbours: list[str] = Field(default_factory=list)
+
+
+class BreadCell(Cell, BaseModel):
+    visited: bool = Field(default=False)
+    parent_cell: 'BreadCell' = Field(default=None)
 
 
 def get_blocked_cells(rows: int, cols: int) -> set[tuple[int, int]]:
