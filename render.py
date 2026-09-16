@@ -135,6 +135,37 @@ class MazePainter:
         if walls & 8:
             canvas.fill_rect(tlx, tly, w, cell_h, wall_colour)
 
+    def draw_path(self, path: list[tuple[int, int]], canvas: Canvas) -> None:
+        """Connect the centres of adjacent path cells, supplied as (x, y)."""
+        if not path:
+            return
+
+        cell_size = self.cell_thick + 2 * self.wall_thick
+        thickness = max(1, self.cell_thick // 3)
+        half = thickness // 2
+        # Choose black or white for contrast with the corridor colour.
+        c0, c1, c2, alpha = self.colour_pair.path
+        channel = 0 if c0 + c1 + c2 >= 384 else 255
+        colour = (channel, channel, channel, alpha)
+
+        previous: tuple[int, int] | None = None
+        for x, y in path:
+            cx = self.wall_thick + x * cell_size + cell_size // 2
+            cy = self.wall_thick + y * cell_size + cell_size // 2
+            if previous is None:
+                canvas.fill_rect(cx - half, cy - half,
+                                 thickness, thickness, colour)
+            else:
+                px, py = previous
+                canvas.fill_rect(
+                    min(px, cx) - half,
+                    min(py, cy) - half,
+                    abs(cx - px) + thickness,
+                    abs(cy - py) + thickness,
+                    colour,
+                )
+            previous = (cx, cy)
+
     def draw_maze(self, maze: Maze, canvas: Canvas) -> None:
         """Draw every cell in a maze.
 
@@ -208,13 +239,20 @@ class MazeRender:
         if keynum == self.EXIT_KEY:
             self.m.mlx_loop_exit(self.mlx_ptr)
         elif keynum == self.REGEN_KEY:
+            self.generator.path.clear()
             self.generator.generate()
+            self.generator.solve()
             self.refresh()
         elif keynum == self.PATH_KEY:
-            ...
+            self.toggle_path()
         elif keynum == self.COLOUR_KEY:
             self.painter.change_colour_pair()
             self.refresh()
+
+    def toggle_path(self) -> None:
+        """Show or hide the stored solution and redraw the window."""
+        self.generator.show_path = not self.generator.show_path
+        self.refresh()
 
     def draw_menu(self) -> None:
         """Draw the visualizer controls below the maze."""
@@ -226,6 +264,8 @@ class MazeRender:
         if self.canvas is None:
             raise RuntimeError("Cannot refresh before the canvas is initialized.")
         self.painter.draw_maze(self.generator, self.canvas)
+        if self.generator.show_path:
+            self.painter.draw_path(self.generator.path, self.canvas)
         self.m.mlx_put_image_to_window(self.mlx_ptr, self.win_ptr, self.img_ptr, 0, 0)
         self.draw_menu()
 

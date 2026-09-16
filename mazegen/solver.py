@@ -1,7 +1,6 @@
 from .config import MazeConfig
 from .cell import Cell, BreadCell
 from .generator import direction_vectors
-import time # needd to remove this 
 
 class Queue:
     """A class to keep track of stuff
