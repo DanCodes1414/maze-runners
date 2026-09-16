@@ -10,7 +10,7 @@ Pressing Ctrl-Z suspends the process instead of closing it. A suspended process
 can be resumed from the terminal using the ``fg`` command.
 """
 import random
-from mlx import Mlx  # type: ignore[import-untyped]
+from mlx import Mlx
 from mazegen.colours import ColourPair, COLOUR_PAIRS
 from mazegen.maze import Maze
 from mazegen.config import MazeConfig
