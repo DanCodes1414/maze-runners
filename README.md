@@ -182,7 +182,7 @@ is not. Because inline comments are not supported, the value is interpreted as
 | Key | Meaning | Value format | Default |
 | --- | --- | --- | --- |
 | `SEED` | Seed used for reproducible generation | Non-negative integer | A random seed |
-| `BRAIDED` | Whether to remove all dead ends | `True` or `False`, case-insensitive | `False` |
+| `BRAID` | Whether to remove all dead ends | `True` or `False`, case-insensitive | `False` |
 
 ### Validity rules
 
@@ -194,7 +194,7 @@ is not. Because inline comments are not supported, the value is interpreted as
 - `ENTRY` and `EXIT` must refer to different cells.
 - `OUTPUT_FILE` may not contain `/`.
 - `OUTPUT_FILE` may not refer to the configuration file itself.
-- `PERFECT` and `BRAIDED` cannot both be `True`, because a braided maze contains
+- `PERFECT` and `BRAID` cannot both be `True`, because a braided maze contains
   loops by definition.
 
 An imperfect grid must support at least two independent loops. A grid containing
@@ -213,7 +213,7 @@ EXIT=19,14
 OUTPUT_FILE=maze.txt
 PERFECT=False
 SEED=42
-BRAIDED=False
+BRAID=False
 ```
 
 ### Example errors
@@ -246,7 +246,7 @@ then modify it:
   exists between any two connected cells.
 - With `PERFECT=False`, eligible walls are selected randomly and removed. This
   creates loops and independent routes suitable for a Pac-Man-style board.
-- With `BRAIDED=True`, the remaining dead ends are removed.
+- With `BRAID=True`, the remaining dead ends are removed.
 
 The visible `42` pattern is represented using `BLOCKED` cells. These cells are
 fully enclosed and excluded from the connected maze structure.
@@ -489,7 +489,7 @@ Values are converted in the following order:
 
 1. `OUTPUT_FILE`
 2. `PERFECT`
-3. `BRAIDED`
+3. `BRAID`
 4. `WIDTH`
 5. `HEIGHT`
 6. `SEED`
