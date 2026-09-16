@@ -20,7 +20,7 @@ from mazegen.config import MazeConfig
 class MazeParsing:
     MANDATORY_KEYS = ["WIDTH", "HEIGHT", "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"]
 
-    ADDITIONAL_KEYS = ["SEED", "BRAIDED"]
+    ADDITIONAL_KEYS = ["SEED", "BRAID"]
     """Namespace holding the parsing steps for a configuration file.
 
     The class keeps no state and is never instantiated: every method is
@@ -183,7 +183,7 @@ class MazeParsing:
 
         Args:
             kv_dictionary: The parsed configuration.
-            flag_name: The key to read, e.g. "PERFECT" or "BRAIDED". It
+            flag_name: The key to read, e.g. "PERFECT" or "BRAID". It
                 is also used in the error message, and must be present
                 in kv_dictionary.
 
@@ -237,12 +237,12 @@ class MazeParsing:
         MazeConfig, which validates them. This is the intended way to
         create a MazeConfig from a file.
 
-        The optional keys fall back to a default when absent: BRAIDED to
-        False and SEED to None. BRAIDED is passed to MazeConfig as its
+        The optional keys fall back to a default when absent: BRAID to
+        False and SEED to None. BRAID is passed to MazeConfig as its
         braid argument.
 
         Values are converted in a fixed order (OUTPUT_FILE, PERFECT,
-        BRAIDED, WIDTH, HEIGHT, SEED, ENTRY, EXIT) and the first failure
+        BRAID, WIDTH, HEIGHT, SEED, ENTRY, EXIT) and the first failure
         stops the parsing, so a file with several problems only reports
         the first one in that order.
 
@@ -265,7 +265,7 @@ class MazeParsing:
                 empty value for a recognised key.
             errors.OutputFilenameError: If OUTPUT_FILE points at the
                 configuration file itself.
-            errors.FlagError: On a PERFECT or BRAIDED value that is not
+            errors.FlagError: On a PERFECT or BRAID value that is not
                 a boolean.
             errors.TupleError: If ENTRY or EXIT does not hold exactly
                 two coordinates.
@@ -281,10 +281,10 @@ class MazeParsing:
             raise errors.MissingKeyError(missing_keys)
         output_filename = cls.check_output_filename(kv_dictionary["OUTPUT_FILE"], config_filename)
         perfect = cls.parse_flag(kv_dictionary, "PERFECT")
-        if "BRAIDED" in kv_dictionary:
-            braided = cls.parse_flag(kv_dictionary, "BRAIDED")
+        if "BRAID" in kv_dictionary:
+            braid = cls.parse_flag(kv_dictionary, "BRAID")
         else:
-            braided = False
+            braid = False
         width = cls.parse_dimension(kv_dictionary["WIDTH"], "WIDTH")
         height = cls.parse_dimension(kv_dictionary["HEIGHT"], "HEIGHT")
         if "SEED" in kv_dictionary:
@@ -299,7 +299,7 @@ class MazeParsing:
             entry=entry_point,
             exit=exit_point,
             perfect=perfect,
-            braid=braided,
+            braid=braid,
             seed=seed,
             output_file=output_filename
         )
