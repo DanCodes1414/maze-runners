@@ -280,7 +280,8 @@ class MazeRender:
     def run_window(self) -> None:
         """Create the MLX window and run its event loop."""
         text_height = 25
-        win_width = self.painter.maze_width_in_pixels
+        menu_min_width = 375
+        win_width = max(self.painter.maze_width_in_pixels, menu_min_width)
         win_height = self.painter.maze_height_in_pixels + text_height
 
         self.mlx_ptr = self.m.mlx_init()
@@ -296,6 +297,7 @@ class MazeRender:
         line_len_in_pix = mem[2] // bytes_per_pixel
 
         self.canvas = Canvas(image_in_bytes, line_len_in_pix, bytes_per_pixel)
+        self.canvas.fill_rect(0, 0, win_width, win_height, (0, 0, 0, 255))
         self.refresh()
         self.m.mlx_hook(self.win_ptr, self.CLOSE_BUTTON, 0, self.myclose, None)
         self.m.mlx_key_hook(self.win_ptr, self.mykey, None)
