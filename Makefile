@@ -9,7 +9,7 @@ install: check-venv check-pip
 	python3 -m pip install -r requirements.txt
 
 install-mac: check-venv check-pip
-	python -m pip install vis_src/mlx_CLXV/mlx-2.4-py3-none-any.whl && \
+	python -m pip install vis_src/src/mlx_CLXV-2.2.tgz && \
 	python3 -m pip install -U flake8 mypy && \
 	python3 -m pip install -r requirements.txt
 
