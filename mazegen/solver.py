@@ -91,6 +91,7 @@ class MazeSolver:
         self.bfs_grid = self.create_bread_grid(self.grid)
         self.queue.enqueue(entry_point)
         self.bfs_grid[entry_point[0]][entry_point[1]].visited = True
+        point = (0, 0)
         while not self.queue.is_empty():
             point = self.queue.dequeue()
             if point == exit_point:
