@@ -10,7 +10,7 @@ Pressing Ctrl-Z suspends the process instead of closing it. A suspended process
 can be resumed from the terminal using the ``fg`` command.
 """
 import random
-from mlx import Mlx
+from mlx import Mlx  # type: ignore[import-untyped]
 from mazegen.colours import ColourPair, COLOUR_PAIRS
 from mazegen.maze import Maze
 from mazegen.config import MazeConfig
@@ -118,7 +118,10 @@ class MazePainter:
         if walls == 15:
             blocked_cells_constant = 2 / 3
             r, g, b, a = self.colour_pair.path
-            path_colour = (int(r * blocked_cells_constant), int(g * blocked_cells_constant), int(b * blocked_cells_constant), a)
+            scaled_r = int(r * blocked_cells_constant)
+            scaled_g = int(g * blocked_cells_constant)
+            scaled_b = int(b * blocked_cells_constant)
+            path_colour = (scaled_r, scaled_g, scaled_b, a)
         else:
             path_colour = self.colour_pair.path
 
@@ -167,9 +170,8 @@ class MazePainter:
                                  thickness, thickness, colour)
             else:
                 px, py = previous
-                canvas.fill_rect(min(px, cx) - half, min(py, cy) - half, abs(cx - px) + thickness, 
-                                 abs(cy - py) + thickness, colour,
-                                )
+                canvas.fill_rect(min(px, cx) - half, min(py, cy) - half, abs(cx - px) + thickness,
+                                 abs(cy - py) + thickness, colour)
             previous = (cx, cy)
 
     def draw_maze(self, maze: Maze, canvas: Canvas) -> None:

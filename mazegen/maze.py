@@ -20,7 +20,7 @@ class Maze(BaseModel):
     config: MazeConfig
     show_path: bool = Field(default=False)
     grid: list[list['Cell']] = Field(default_factory=list[list['Cell']])
-    path: list[tuple[int, int]] = Field(default_factory=list) # TODO: Perhaps change to this -> path: list[str] = Field(default_factory=list)
+    path: list[tuple[int, int]] = Field(default_factory=list)
     generated: bool = Field(default=False, exclude=True)
 
     def generate(self) -> None:

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from enum import Enum
 from pydantic import BaseModel, Field
 
@@ -59,7 +60,7 @@ class AutomatonCell(Cell, BaseModel):
 
 class BreadCell(Cell, BaseModel):
     visited: bool = Field(default=False)
-    parent_cell: 'BreadCell' | None = Field(default=None)
+    parent_cell: BreadCell | None = Field(default=None)
 
 
 def get_blocked_cells(rows: int, cols: int) -> set[tuple[int, int]]:

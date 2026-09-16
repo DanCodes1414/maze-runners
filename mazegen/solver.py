@@ -2,6 +2,7 @@ from .config import MazeConfig
 from .cell import Cell, BreadCell
 from .generator import direction_vectors
 
+
 class Queue:
     """A class to keep track of stuff
     """
@@ -27,11 +28,11 @@ class MazeSolver:
     Attributes:
         config (MazeConfig): The configuration for generating the maze.
         grid (list[list[Cell]]): A 2D list representing the maze grid with Cell objects.
-    """  
+    """
     def __init__(self, grid: list[list['Cell']], config: MazeConfig) -> None:
         self.config = config
         self.grid = grid
-        self.bfs_grid : list[list['BreadCell']] = []
+        self.bfs_grid: list[list['BreadCell']] = []
         self.queue = Queue()
 
     @staticmethod
@@ -44,9 +45,10 @@ class MazeSolver:
             for c in range(cols):
                 bread_grid[r][c].walls = grid[r][c].walls
         return bread_grid
-        
-    def find_valid_directions(self, point: tuple[int, int], direction_vectors: dict[str, tuple[int, int]]) -> dict[str, tuple[int, int]]:
-        valid_directions = {key:direction_vectors[key] for key in direction_vectors}
+
+    def find_valid_directions(self, point: tuple[int, int],
+                              direction_vectors: dict[str, tuple[int, int]]) -> dict[str, tuple[int, int]]:
+        valid_directions = {key: direction_vectors[key] for key in direction_vectors}
         walls = self.grid[point[0]][point[1]].walls
         if walls & 1:
             valid_directions.pop("N")
@@ -71,7 +73,7 @@ class MazeSolver:
                     self.bfs_grid[neighbour_row][neighbour_col].visited = True
                     self.bfs_grid[neighbour_row][neighbour_col].parent_cell = self.bfs_grid[point[0]][point[1]]
 
-    def reverse_path(self, cell: 'BreadCell' | None, entry_point: tuple[int, int], exit_point: tuple[int, int]) -> list[tuple[int, int]]:
+    def reverse_path(self, cell: BreadCell | None, entry_point: tuple[int, int]) -> list[tuple[int, int]]:
         shortest_path: list[tuple[int, int]] = []
         if cell is None:
             return shortest_path
@@ -84,7 +86,7 @@ class MazeSolver:
             cell = parent
             point = (cell.row, cell.col)
             shortest_path.append(point)
-        shortest_path.reverse() 
+        shortest_path.reverse()
         return shortest_path
 
     def solve(self) -> list[tuple[int, int]]:
@@ -102,5 +104,5 @@ class MazeSolver:
             if point == exit_point:
                 break
             self.explore_neighbours(point)
-        shortest_path = self.reverse_path(self.bfs_grid[point[0]][point[1]], entry_point, exit_point)
+        shortest_path = self.reverse_path(self.bfs_grid[point[0]][point[1]], entry_point)
         return shortest_path
