@@ -1,22 +1,30 @@
 from pydantic import BaseModel
 
-
-GREY = '\u001b[90m'
-WHITE = '\u001b[37m'
-GREEN = '\u001b[32m'
-RED = '\u001b[31m'
-BLUE = '\u001b[34m'
-INDIGO = '\u001b[35m'
-YELLOW = '\u001b[33m'
-RESET = '\u001b[0m'
+# in the format BGRA
+CHARCOAL = (50, 50, 50, 255)
+CREAM = (230, 230, 200, 255)
+SLATE = (110, 90, 80, 255)
+LIGHT_BLUE = (230, 216, 173, 255)
+DEEP_TEAL = (102, 102, 0, 255)
+MINT = (152, 251, 152, 255)
+NAVY = (139, 100, 64, 255)
+SANDY = (210, 180, 140, 255)
+DARK_PURPLE = (130, 0, 75, 255)
+PALE_LAVENDER = (250, 230, 230, 255)
+FOREST_GREEN = (34, 139, 34, 255)
+GOLD = (215, 215, 0, 255)
 
 
 class ColourPair(BaseModel):
-    walls: str
-    path: str
+    walls: tuple[int, int, int, int]
+    path: tuple[int, int, int, int]
 
 
 COLOUR_PAIRS = [
-    ColourPair(walls=WHITE, path=BLUE),
-    ColourPair(walls=YELLOW, path=INDIGO),
+    ColourPair(walls=CHARCOAL, path=CREAM),
+    ColourPair(walls=SLATE, path=LIGHT_BLUE),
+    ColourPair(walls=FOREST_GREEN, path=SANDY),
+    ColourPair(walls=DEEP_TEAL, path=MINT),
+    ColourPair(walls=NAVY, path=GOLD),
+    ColourPair(walls=DARK_PURPLE, path=PALE_LAVENDER)
 ]

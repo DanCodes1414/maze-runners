@@ -1,13 +1,12 @@
-import random
 from pydantic import BaseModel, Field
 from .cell import Cell
 from .generator import MazeGenerator
 from .solver import MazeSolver
-from .colours import ColourPair, COLOUR_PAIRS
 from .config import MazeConfig
 
 
 class Maze(BaseModel):
+
     """
     Represents a maze with a grid of cells, start and end positions, and the generated path.
 
@@ -19,7 +18,6 @@ class Maze(BaseModel):
         generated (bool): A flag indicating whether the maze has been generated.
     """
     config: MazeConfig
-    colours: ColourPair = Field(default=COLOUR_PAIRS[0])
     show_path: bool = Field(default=False)
     grid: list[list['Cell']] = Field(default_factory=list[list['Cell']])
     path: list[tuple[int, int]] = Field(default_factory=list) # TODO: Perhaps change to this -> path: list[str] = Field(default_factory=list)
@@ -34,7 +32,7 @@ class Maze(BaseModel):
             self.grid = generator.generate()
             self.generated = True
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            print(f"Unexpected error in Generate: {e}")
 
     def solve(self) -> None:
         """
@@ -46,25 +44,7 @@ class Maze(BaseModel):
             solver = MazeSolver(self.config)
             self.path = solver.solve()
         except Exception as e:
-            print(f"Unexpected error: {e}")
-
-    # TODO: Remove this method?
-    def render(self) -> None:
-        """
-        Renders the maze visually in the console or a graphical interface.
-        """
-        if not self.generated:
-            raise RuntimeError("Maze grid is not generated. Call generate() before rendering.")
-        pass
-
-    def switch_colours(self) -> None:
-        """
-        Switches the colour for rendering the maze.
-        """
-        new_colour_pair = self.colours
-        while new_colour_pair == self.colours:
-            new_colour_pair = random.Random().choice(COLOUR_PAIRS)
-        self.colours = new_colour_pair
+            print(f"Unexpected error in Solve: {e}")
 
     def export(self) -> None:
         """
@@ -100,7 +80,8 @@ class Maze(BaseModel):
                 if (dr, dc) == (dir_r, dir_c):
                     direction = dir_key
                     break
-            shortest_path += direction
+            if direction is not None:
+                shortest_path += direction
 
         try:
             with open(self.config.output_file, 'w') as f:

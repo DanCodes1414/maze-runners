@@ -84,7 +84,7 @@ def update_free_neighbours(cell: 'AutomatonCell', grid: list[list['AutomatonCell
                 cell.free_neighbours.append(direction)
 
 
-def initialise_grid(config:MazeConfig) -> list[list['AutomatonCell']]:
+def initialise_grid(config: MazeConfig) -> list[list['AutomatonCell']]:
     """
     Initialises a grid of AutomatonCells with the specified dimensions.
     """

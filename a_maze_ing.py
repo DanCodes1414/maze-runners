@@ -3,9 +3,9 @@
 from config_parser import MazeParsing
 from mazegen.errors import MazeConfigError
 from mazegen.maze import Maze
+from render import MazeRender
 from parser_errors import MazeParserError
 import sys
-
 
 
 def main() -> int:
@@ -24,9 +24,9 @@ def main() -> int:
         return 1
     maze = Maze(config=maze_config)
     maze.generate()
-    maze.solve()
-    maze.render()
+    renderer = MazeRender(maze_config, maze)
     maze.export()
+    renderer.run_window()
     return 0
 
 

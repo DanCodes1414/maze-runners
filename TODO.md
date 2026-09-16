@@ -24,7 +24,7 @@
 - [x] BONUS: parsing for the SEED flag
 - [x] Check that the output_filename is valid (write parsing in MazeConfig.get_file)
 - [x] Write doctrings
-- [ ] Write check for valid starting and exit points if 42 logo is present
+- [x] Write check for valid starting and exit points if 42 logo is present
 
 ## Maze Generation (dqureshi)
 - [x] External walls are fully covered (no escaping via the edge of the maze!)
@@ -55,14 +55,18 @@
 - [x] File is created in root and saved properly
 
 
-## Terminal ASCII rendering (dmgeorgi)
-- [ ] Generated maze appears when running code.
-- [ ] Option to: Generate a new maze
+## MiniLibX rendering (dmgeorgi)
+- [x] Generated maze appears when running code.
+- [x] Option to: Generate a new maze
 - [ ] Option to: Show/Hide a valid shortest path from the entrance to the exit.
-- [ ] Option to: Change maze wall colours
+- [x] Option to: Change maze wall colours
 - [ ] Entry/Exit cells should be clearly shown (with different colours)
-- [ ] The program will be constantly waiting for user input, so there should be an option to Quit
+- [x] The program will be constantly waiting for user input, so there should be an option to Quit
 - [ ] Indication of which cell is the Entry cell and which cell is the Exit cell.
+- [x] Cells in the '42' have a darker centre
+- [x] Add nicer colours.
+- [ ] Text in window will never be cut off
+
 
 
 ## Standalone module (dqureshi)

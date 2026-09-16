@@ -1,8 +1,8 @@
 from pydantic import BaseModel, Field, model_validator
 from typing import Self
 from .errors import (
-    OutputFilenameError, PointError, ContradictionError, InvalidDimensionError, MazeTooSmallError, PointOutOfBoundsError, BlockedCellsError
-)
+    OutputFilenameError, PointError, ContradictionError, InvalidDimensionError,
+    MazeTooSmallError, MazeTooBigError, BlockedCellsError, PointOutOfBoundsError)
 from .cell import get_blocked_cells
 
 
@@ -44,7 +44,7 @@ class MazeConfig(BaseModel):
         """
         if '/' in self.output_file:
             raise OutputFilenameError("OUTPUT_FILE does not accept paths.")
-        self.width, self.height = MazeConfig.validate_maze(self.width, self.height, self.perfect)
+        self.width, self.height = MazeConfig.validate_maze(self.width, self.height)
         maze_dimensions = (self.width, self.height)
         self.entry = MazeConfig.validate_point("ENTRY", self.entry, maze_dimensions)
         self.exit = MazeConfig.validate_point("EXIT", self.exit, maze_dimensions)
@@ -55,7 +55,6 @@ class MazeConfig(BaseModel):
         if self.seed is not None:
             MazeConfig.validate_dimension(self.seed, "SEED")
         return self
-
 
     @staticmethod
     def validate_dimension(dimension_value: int, dimension_name: str) -> int:
@@ -69,8 +68,7 @@ class MazeConfig(BaseModel):
         return dimension_value
 
     @staticmethod
-    def validate_maze(width: int, height: int,
-                      perfect_flag: bool) -> tuple[int, int]:
+    def validate_maze(width: int, height: int) -> tuple[int, int]:
         """Return (width, height) if the maze is large enough.
 
         The minimum depends on perfect_flag. A perfect maze needs both
@@ -81,20 +79,18 @@ class MazeConfig(BaseModel):
 
         Raise MazeTooSmallError if either requirement is not met.
         """
-        if perfect_flag:
-            if width < 1:
-                raise MazeTooSmallError("width", 1, "perfect")
-            if height < 1:
-                raise MazeTooSmallError("height", 1, "perfect")
-            if width * height < 2:
-                raise MazeTooSmallError("area", 2, "perfect")
-        else:
-            if width < 2:
-                raise MazeTooSmallError("width", 2, "imperfect")
-            if height < 2:
-                raise MazeTooSmallError("height", 2, "imperfect")
-            if width * height < 6:
-                raise MazeTooSmallError("area", 6, "imperfect")
+        min_width = 4
+        min_height = 4
+        max_height = 50
+        max_width = 50
+        if width < min_width:
+            raise MazeTooSmallError("width", min_width)
+        if height < min_height:
+            raise MazeTooSmallError("height", min_height)
+        if width > max_width:
+            raise MazeTooBigError("width", max_width)
+        if height > max_height:
+            raise MazeTooBigError("height", max_height)
         return (width, height)
 
     @staticmethod
