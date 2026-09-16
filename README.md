@@ -120,7 +120,8 @@ MiniLibX must be run on a UTM virtual machine. Follow these steps only if runnin
 14. Run `sudo apt install libxcb1-dev libxcb-keysyms1-dev libvulkan-dev zlib1g-dev libbsd-dev glslc pip clang git python3.13-venv`
 15. Now clone the repo: `git clone REPO_NAME a_maze_ing && cd a_maze_ing`
 16. Run `python3 -m venv .venv && source .venv/bin/activate`
-17. Run `make install-mac` and finally `make run`
+17. Run `tar -xvf vis_src/src/mlx_CLXV-2.2.tgz && ./mlx_CLXV/configure.sh && make -C mlx_CLXV`
+18. Run `make install-mac` and finally `make run`
 
 
 ### Running the program
