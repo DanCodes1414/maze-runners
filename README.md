@@ -117,10 +117,10 @@ MiniLibX must be run on a UTM virtual machine. Follow these steps only if runnin
 11. Open the terminal inside the VM and run `ssh-keygen -t ed25519 -C "YOUR_EMAIL"`
 12. Run `cat .ssh/id_ed25519.pub` and copy the value (Shift -> Control -> C)
 13. Paste the value in intra SSH settings (https://profile.intra.42.fr/gitlab_users)
-14. Run `sudo apt install libxcb1-dev libxcb-keysyms1-dev libvulkan-dev zlib1g-dev libbsd-dev glslc pip clang git`
+14. Run `sudo apt install libxcb1-dev libxcb-keysyms1-dev libvulkan-dev zlib1g-dev libbsd-dev glslc pip clang git python3.13-venv`
 15. Now clone the repo: `git clone REPO_NAME a_maze_ing && cd a_maze_ing`
 16. Run `python3 -m venv .venv && source .venv/bin/activate`
-17. Run `git clone https://github.com/42school/mlx_CLXV.git && cd mlx_CLXV && ./configure.sh && make && cd ..`
+17. Run `cd vis_src && git clone https://github.com/42school/mlx_CLXV.git && cd mlx_CLXV && ./configure.sh && make && cd ../..`
 18. Run `make install-mac` and finally `make run`
 
 
